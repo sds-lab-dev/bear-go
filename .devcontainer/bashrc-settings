@@ -1,0 +1,83 @@
+git_branch() {
+  # Check Git repository or not
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+
+  # Branch or detached head
+  local branch
+  branch=$(git symbolic-ref --short -q HEAD 2>/dev/null || git describe --tags --always 2>/dev/null || echo "DETACHED")
+
+  # Status flags
+  local flags=()
+  # Staged (added)
+  if ! git diff --cached --quiet --ignore-submodules -- 2>/dev/null; then
+    flags+=("Added")
+  fi
+  # Working tree changed
+  if ! git diff --quiet --ignore-submodules -- 2>/dev/null; then
+    flags+=("Changed")
+  fi
+  # Untracked files
+  if [ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ]; then
+    flags+=("Untracked")
+  fi
+  # Stashed
+  if git rev-parse -q --verify refs/stash >/dev/null 2>&1; then
+    flags+=("Stashed")
+  fi
+
+  # Upstream ahead/behind
+  local ahead behind
+  local upstream
+  upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
+  if [ -n "$upstream" ]; then
+    local counts
+    counts=$(git rev-list --left-right --count @{u}...HEAD 2>/dev/null)
+    ahead=$(echo "$counts" | awk '{print $2}')
+    behind=$(echo "$counts" | awk '{print $1}')
+    if [ "${ahead:-0}" -gt 0 ]; then flags+=("↑${ahead}"); fi
+    if [ "${behind:-0}" -gt 0 ]; then flags+=("↓${behind}"); fi
+  fi
+
+  IFS="/"
+  flags_joined="${flags[*]}"
+
+  [ -n "$flags" ] && echo "($branch) (${flags_joined})" || echo "($branch)"
+}
+
+# Colors
+reset='\[\e[0m\]'
+cyan='\[\e[36m\]'
+purple='\[\e[35m\]'
+
+# PS1: $WORKING_DIRECTORY: ($BRANCH_NAME) ($STATUS_FLAGS)
+PS1="\w: ${purple}\$(git_branch)${reset}\n\\$ "
+
+unset LC_ALL
+export LANG=en_US.UTF-8
+export LC_CTYPE=ko_KR.UTF-8
+export LESSCHARSET=utf-8
+export GOROOT=$HOME/.go
+export GOPATH=$HOME/go
+export PATH=$PATH:/usr/local/bin:$HOME/.local/bin:$GOPATH/bin:$GOROOT/bin
+
+if [ -f "/workspace/.env" ]; then
+  set -a
+  . "/workspace/.env"
+  set +a
+fi
+
+if [[ $- == *i* ]]; then
+  # 위/아래 화살표를 "현재 입력된 내용" 기준으로 히스토리 검색 이동으로 바꿉니다.
+  bind '"\e[A": history-search-backward'
+  bind '"\e[B": history-search-forward'
+
+  # HOME/END 버튼
+  bind '"\e[1~": beginning-of-line'
+  bind '"\e[4~": end-of-line'
+  bind '"\e[H":  beginning-of-line'
+  bind '"\e[F":  end-of-line'
+  bind '"\eOH":  beginning-of-line'
+  bind '"\eOF":  end-of-line'
+  bind '"\e[7~": beginning-of-line'
+  bind '"\e[8~": end-of-line'
+fi
