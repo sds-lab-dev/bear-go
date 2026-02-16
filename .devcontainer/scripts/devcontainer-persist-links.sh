@@ -6,6 +6,7 @@ PERSIST="${PERSIST:-/persist}"
 # Absolute paths only
 DIR_TARGETS=(
   "/root/.claude"
+  "/root/.local"
 )
 
 FILE_TARGETS=(
