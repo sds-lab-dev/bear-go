@@ -78,3 +78,35 @@ func TestRenderBanner_NarrowTerminal(t *testing.T) {
 		)
 	}
 }
+
+func TestRenderBanner_ColumnAlignment(t *testing.T) {
+	banner := RenderBanner(120)
+	plain := stripANSI(banner)
+	lines := strings.Split(plain, "\n")
+
+	// 오른쪽 컬럼 텍스트가 있는 모든 줄에서 bear art 영역이
+	// 정확히 bearArtWidth 폭으로 패딩되어 있는지 확인.
+	for i := range bearArtLines {
+		if i >= len(lines) {
+			break
+		}
+		line := lines[i]
+		if len(line) <= bearArtWidth {
+			continue
+		}
+
+		// bearArtWidth 위치 이후에 오른쪽 컬럼 텍스트가 있는 줄만 검증
+		rightText := strings.TrimSpace(line[bearArtWidth:])
+		if rightText == "" {
+			continue
+		}
+
+		artPart := line[:bearArtWidth]
+		if len(artPart) != bearArtWidth {
+			t.Errorf(
+				"line %d: art region width is %d, expected %d",
+				i, len(artPart), bearArtWidth,
+			)
+		}
+	}
+}

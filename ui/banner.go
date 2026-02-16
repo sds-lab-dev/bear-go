@@ -16,7 +16,7 @@ var bearArtLines = []string{
 }
 
 const (
-	bearArtWidth            = 21
+	bearArtWidth            = 22
 	rightColumnStartOffset  = 1
 	MinTerminalWidth        = bearArtWidth + 1
 	sloganText              = "Bear: The AI developer that saves your time."
