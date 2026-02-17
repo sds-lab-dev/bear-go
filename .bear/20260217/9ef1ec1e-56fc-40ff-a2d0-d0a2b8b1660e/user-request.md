@@ -1,0 +1,1 @@
+/workspace/.bear/20260215/bear-ai-tui-scaffold 세션으로부터 재시작 되었음.

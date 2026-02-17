@@ -1,6 +1,6 @@
 # Bear AI Developer Application
 
-This project, named **“Bear AI Developer,”** is a tool that supports specification-driven software development on top of the Claude Code CLI. The application is written in Go language. You can build a consistent development environment using Dev Containers.
+This project, named **“Bear AI Developer,”** is a TUI-based application that supports specification-driven software development on top of the Claude Code CLI. The application is written in Go language. You can build a consistent development environment using Dev Containers.
 
 ## Requirements
 
