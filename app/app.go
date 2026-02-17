@@ -41,7 +41,18 @@ func Run(stdout, stderr io.Writer) error {
 		return nil
 	}
 
-	fmt.Fprintf(stdout, "Workspace set to: %s\n", result.Path)
+	requestModel := ui.NewUserRequestPromptModel()
+	requestProgram := tea.NewProgram(requestModel, tea.WithOutput(stderr))
+	finalRequestModel, err := requestProgram.Run()
+	if err != nil {
+		return fmt.Errorf("user request prompt failed: %w", err)
+	}
+
+	requestResult := finalRequestModel.(ui.UserRequestPromptModel).Result()
+	if requestResult.Cancelled {
+		return nil
+	}
+
 	return nil
 }
 
