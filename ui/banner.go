@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 var bearArtLines = []string{
@@ -15,13 +16,25 @@ var bearArtLines = []string{
 	`  \   \________/   /`,
 }
 
+var bearArtWidth = calcBearArtWidth()
+
 const (
-	bearArtWidth            = 22
-	rightColumnStartOffset  = 1
-	MinTerminalWidth        = bearArtWidth + 1
-	sloganText              = "Bear: The AI developer that saves your time."
-	descriptionText         = "Bear, your AI developer, does the heavy lifting for you; you just collect your paycheck and don't worry about a thing."
+	rightColumnStartOffset = 1
+	sloganText             = "Bear: The AI developer that saves your time."
+	descriptionText        = "Bear, your AI developer, does the heavy lifting for you; you just collect your paycheck and don't worry about a thing."
 )
+
+var MinTerminalWidth = bearArtWidth + 1
+
+func calcBearArtWidth() int {
+	maxWidth := 0
+	for _, line := range bearArtLines {
+		if w := utf8.RuneCountInString(line); w > maxWidth {
+			maxWidth = w
+		}
+	}
+	return maxWidth
+}
 
 type styleName int
 
