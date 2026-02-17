@@ -68,8 +68,8 @@ func TestRenderBanner_ContainsSeparator(t *testing.T) {
 }
 
 func TestRenderBanner_NarrowTerminal(t *testing.T) {
-	wideRightCol := buildRightColumn(120 - bearArtWidth)
-	narrowRightCol := buildRightColumn(60 - bearArtWidth)
+	wideRightCol := buildRightColumn(120 - bearArtWidth - bearArtGap)
+	narrowRightCol := buildRightColumn(60 - bearArtWidth - bearArtGap)
 
 	if len(narrowRightCol) <= len(wideRightCol) {
 		t.Errorf(
@@ -84,28 +84,29 @@ func TestRenderBanner_ColumnAlignment(t *testing.T) {
 	plain := stripANSI(banner)
 	lines := strings.Split(plain, "\n")
 
-	// 오른쪽 컬럼 텍스트가 있는 모든 줄에서 bear art 영역이
-	// 정확히 bearArtWidth 폭으로 패딩되어 있는지 확인.
+	// 오른쪽 컬럼 텍스트가 있는 모든 줄에서 bear art 영역 + gap이
+	// 정확히 bearArtWidth+bearArtGap 폭으로 패딩되어 있는지 확인.
+	leftColumnWidth := bearArtWidth + bearArtGap
 	for i := range bearArtLines {
 		if i >= len(lines) {
 			break
 		}
 		line := lines[i]
-		if len(line) <= bearArtWidth {
+		if len(line) <= leftColumnWidth {
 			continue
 		}
 
-		// bearArtWidth 위치 이후에 오른쪽 컬럼 텍스트가 있는 줄만 검증
-		rightText := strings.TrimSpace(line[bearArtWidth:])
+		// leftColumnWidth 위치 이후에 오른쪽 컬럼 텍스트가 있는 줄만 검증
+		rightText := strings.TrimSpace(line[leftColumnWidth:])
 		if rightText == "" {
 			continue
 		}
 
-		artPart := line[:bearArtWidth]
-		if len(artPart) != bearArtWidth {
+		artPart := line[:leftColumnWidth]
+		if len(artPart) != leftColumnWidth {
 			t.Errorf(
-				"line %d: art region width is %d, expected %d",
-				i, len(artPart), bearArtWidth,
+				"line %d: left column width is %d, expected %d",
+				i, len(artPart), leftColumnWidth,
 			)
 		}
 	}

@@ -20,11 +20,12 @@ var bearArtWidth = calcBearArtWidth()
 
 const (
 	rightColumnStartOffset = 1
+	bearArtGap             = 3
 	sloganText             = "Bear: The AI developer that saves your time."
-	descriptionText        = "Bear, your AI developer, does the heavy lifting for you; you just collect your paycheck and don't worry about a thing."
+	descriptionText        = "Bear does the heavy lifting for you; you just collect your paycheck and don't worry about a thing."
 )
 
-var MinTerminalWidth = bearArtWidth + 1
+var MinTerminalWidth = bearArtWidth + bearArtGap + 1
 
 func calcBearArtWidth() int {
 	maxWidth := 0
@@ -71,13 +72,13 @@ func buildRightColumn(maxWidth int) []rightColumnLine {
 }
 
 func RenderBanner(terminalWidth int) string {
-	rightColWidth := terminalWidth - bearArtWidth
+	rightColWidth := terminalWidth - bearArtWidth - bearArtGap
 	rightColLines := buildRightColumn(rightColWidth)
 
 	var builder strings.Builder
 
 	for i, artLine := range bearArtLines {
-		padded := fmt.Sprintf("%-*s", bearArtWidth, artLine)
+		padded := fmt.Sprintf("%-*s", bearArtWidth+bearArtGap, artLine)
 		builder.WriteString(BearArtStyle.Render(padded))
 
 		rightIdx := i - rightColumnStartOffset
