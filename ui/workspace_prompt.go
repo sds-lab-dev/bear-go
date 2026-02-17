@@ -14,14 +14,14 @@ type WorkspacePromptResult struct {
 }
 
 type WorkspacePromptModel struct {
-	textarea     textarea.Model
-	currentDir   string
-	validatePath func(string) error
-	errorMessage string
-	confirmed    bool
+	textarea      textarea.Model
+	currentDir    string
+	validatePath  func(string) error
+	errorMessage  string
+	confirmed     bool
 	confirmedPath string
-	width        int
-	ready        bool
+	width         int
+	ready         bool
 }
 
 func NewWorkspacePromptModel(currentDir string, validatePath func(string) error) WorkspacePromptModel {
@@ -109,7 +109,12 @@ func (m WorkspacePromptModel) View() string {
 		return "Initializing..."
 	}
 	if m.confirmed {
-		return ""
+		var b strings.Builder
+		b.WriteString(PromptLabelStyle.Render(fmt.Sprintf("Current directory: %s", m.currentDir)))
+		b.WriteByte('\n')
+		b.WriteString(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)))
+		b.WriteString("\n\n")
+		return b.String()
 	}
 
 	var b strings.Builder

@@ -19,15 +19,18 @@ type editorFinishedMsg struct {
 	err error
 }
 
+type startEditorMsg struct{}
+
 type UserRequestPromptModel struct {
-	textarea      textarea.Model
-	errorMessage  string
-	confirmed     bool
-	confirmedText string
-	width         int
-	ready         bool
-	resolveEditor func() (EditorCommand, error)
-	tempFilePath  string
+	textarea        textarea.Model
+	errorMessage    string
+	confirmed       bool
+	confirmedText   string
+	width           int
+	ready           bool
+	resolveEditor   func() (EditorCommand, error)
+	tempFilePath    string
+	launchingEditor bool
 }
 
 func NewUserRequestPromptModel() UserRequestPromptModel {
@@ -72,6 +75,8 @@ func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKey(msg)
+	case startEditorMsg:
+		return m.handleEditorLaunch()
 	case editorFinishedMsg:
 		return m.handleEditorFinished(msg)
 	}
@@ -93,7 +98,7 @@ func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.textarea.SetHeight(m.textarea.LineCount())
 		return m, nil
 	case "ctrl+g":
-		return m.handleEditorLaunch()
+		return m.prepareEditorLaunch()
 	}
 
 	m.errorMessage = ""
@@ -116,15 +121,22 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	return m, tea.Quit
 }
 
+func (m UserRequestPromptModel) prepareEditorLaunch() (tea.Model, tea.Cmd) {
+	m.launchingEditor = true
+	return m, func() tea.Msg { return startEditorMsg{} }
+}
+
 func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
 	editorCmd, err := m.resolveEditor()
 	if err != nil {
+		m.launchingEditor = false
 		m.errorMessage = err.Error()
 		return m, nil
 	}
 
 	tmpFile, err := os.CreateTemp("", "bear-request-*.md")
 	if err != nil {
+		m.launchingEditor = false
 		m.errorMessage = fmt.Sprintf("Failed to create temp file: %v", err)
 		return m, nil
 	}
@@ -133,6 +145,7 @@ func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
 	if _, err := tmpFile.WriteString(content); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpFile.Name())
+		m.launchingEditor = false
 		m.errorMessage = fmt.Sprintf("Failed to write temp file: %v", err)
 		return m, nil
 	}
@@ -149,6 +162,8 @@ func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
 }
 
 func (m UserRequestPromptModel) handleEditorFinished(msg editorFinishedMsg) (tea.Model, tea.Cmd) {
+	m.launchingEditor = false
+
 	if msg.err != nil {
 		m.errorMessage = fmt.Sprintf("Editor failed: %v", msg.err)
 		m.cleanupTempFile()
@@ -181,6 +196,9 @@ func (m UserRequestPromptModel) View() string {
 		return "Initializing..."
 	}
 	if m.confirmed {
+		return ""
+	}
+	if m.launchingEditor {
 		return ""
 	}
 
