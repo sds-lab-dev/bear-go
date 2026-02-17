@@ -29,6 +29,7 @@ func NewWorkspacePromptModel(currentDir string, validatePath func(string) error)
 	ta.Placeholder = ""
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
+	ta.SetHeight(1)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
 
@@ -74,12 +75,14 @@ func (m WorkspacePromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "alt+enter":
 		m.textarea.InsertString("\n")
 		m.errorMessage = ""
+		m.textarea.SetHeight(m.textarea.LineCount())
 		return m, nil
 	}
 
 	m.errorMessage = ""
 	var cmd tea.Cmd
 	m.textarea, cmd = m.textarea.Update(msg)
+	m.textarea.SetHeight(m.textarea.LineCount())
 	return m, cmd
 }
 
