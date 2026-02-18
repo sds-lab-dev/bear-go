@@ -62,7 +62,7 @@ func (m WorkspacePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
-	m.textarea, cmd = updateTextareaWithAutoResize(m.textarea, msg)
+	m.textarea, cmd = m.textarea.Update(msg)
 	return m, cmd
 }
 
@@ -75,13 +75,12 @@ func (m WorkspacePromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "alt+enter":
 		m.textarea.InsertString("\n")
 		m.errorMessage = ""
-		m.textarea.SetHeight(countVisualLines(m.textarea.Value(), m.textarea.Width()))
 		return m, nil
 	}
 
 	m.errorMessage = ""
 	var cmd tea.Cmd
-	m.textarea, cmd = updateTextareaWithAutoResize(m.textarea, msg)
+	m.textarea, cmd = m.textarea.Update(msg)
 	return m, cmd
 }
 
