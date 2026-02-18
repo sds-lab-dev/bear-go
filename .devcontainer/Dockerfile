@@ -7,6 +7,7 @@ WORKDIR /var/tmp
 COPY .devcontainer/scripts .
 RUN ./install_base_packages.sh
 RUN ./install_golang.sh --version 1.26.0
+RUN ./install_delve_debugger.sh
 RUN ./install_ai_assistants.sh
 
 # 환경 설정
