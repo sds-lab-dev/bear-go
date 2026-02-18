@@ -8,10 +8,16 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
 
+	"github.com/sds-lab-dev/bear-go/claudecode"
 	"github.com/sds-lab-dev/bear-go/ui"
 )
 
 func Run(stdout, stderr io.Writer) error {
+	apiKey, err := ValidateAPIKeyEnv(os.LookupEnv)
+	if err != nil {
+		return fmt.Errorf("environment validation failed: %w", err)
+	}
+
 	terminalWidth, err := queryTerminalWidth(stdout)
 	if err != nil {
 		return fmt.Errorf("failed to query terminal width: %w", err)
@@ -51,6 +57,32 @@ func Run(stdout, stderr io.Writer) error {
 	requestResult := finalRequestModel.(ui.UserRequestPromptModel).Result()
 	if requestResult.Cancelled {
 		return nil
+	}
+
+	client, err := claudecode.NewClient(apiKey, result.Path)
+	if err != nil {
+		return fmt.Errorf("failed to create claude client: %w", err)
+	}
+
+	userPrompt := BuildSpecClarificationUserPrompt(requestResult.Text, "")
+
+	queryFunc := func(callback claudecode.StreamCallback) (claudecode.ResultData, error) {
+		return client.Query(SpecAgentSystemPrompt, userPrompt, SpecClarificationJSONSchema, callback)
+	}
+
+	specStreamModel := ui.NewSpecStreamModel(queryFunc)
+	specProgram := tea.NewProgram(specStreamModel, tea.WithOutput(stderr))
+	finalSpecModel, err := specProgram.Run()
+	if err != nil {
+		return fmt.Errorf("spec stream failed: %w", err)
+	}
+
+	specResult := finalSpecModel.(ui.SpecStreamModel).Result()
+	if specResult.Cancelled {
+		return nil
+	}
+	if specResult.Err != nil {
+		return fmt.Errorf("spec agent failed: %w", specResult.Err)
 	}
 
 	return nil
