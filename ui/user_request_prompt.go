@@ -82,7 +82,7 @@ func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
-	m.textarea, cmd = m.textarea.Update(msg)
+	m.textarea, cmd = updateTextareaWithAutoResize(m.textarea, msg)
 	return m, cmd
 }
 
@@ -95,7 +95,7 @@ func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "shift+enter", "alt+enter":
 		m.textarea.InsertString("\n")
 		m.errorMessage = ""
-		m.textarea.SetHeight(m.textarea.LineCount())
+		m.textarea.SetHeight(countVisualLines(m.textarea.Value(), m.textarea.Width()))
 		return m, nil
 	case "ctrl+g":
 		return m.prepareEditorLaunch()
@@ -103,8 +103,7 @@ func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	m.errorMessage = ""
 	var cmd tea.Cmd
-	m.textarea, cmd = m.textarea.Update(msg)
-	m.textarea.SetHeight(m.textarea.LineCount())
+	m.textarea, cmd = updateTextareaWithAutoResize(m.textarea, msg)
 	return m, cmd
 }
 
@@ -178,7 +177,7 @@ func (m UserRequestPromptModel) handleEditorFinished(msg editorFinishedMsg) (tea
 	}
 
 	m.textarea.SetValue(string(content))
-	m.textarea.SetHeight(m.textarea.LineCount())
+	m.textarea.SetHeight(countVisualLines(m.textarea.Value(), m.textarea.Width()))
 	m.errorMessage = ""
 	m.cleanupTempFile()
 	return m, nil
