@@ -97,33 +97,6 @@ func TestUserRequestPromptModel_CtrlCCancels(t *testing.T) {
 	}
 }
 
-func TestUserRequestPromptModel_ResultAfterConfirm(t *testing.T) {
-	m := readyModel(t)
-
-	for _, r := range "my request" {
-		m, _ = sendKey(m, string(r))
-	}
-	m, _ = sendSpecialKey(m, tea.KeyEnter)
-
-	result := m.Result()
-	if result.Cancelled {
-		t.Error("result should not be cancelled")
-	}
-	if result.Text != "my request" {
-		t.Errorf("expected text 'my request', got %q", result.Text)
-	}
-}
-
-func TestUserRequestPromptModel_ResultAfterCancel(t *testing.T) {
-	m := readyModel(t)
-	m, _ = sendSpecialKey(m, tea.KeyCtrlC)
-
-	result := m.Result()
-	if !result.Cancelled {
-		t.Error("result should be cancelled")
-	}
-}
-
 func TestUserRequestPromptModel_ErrorClearsOnInput(t *testing.T) {
 	m := readyModel(t)
 

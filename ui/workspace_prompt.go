@@ -9,8 +9,8 @@ import (
 )
 
 type WorkspacePromptResult struct {
-	Path      string
-	Cancelled bool
+	Path string
+	View string
 }
 
 type WorkspacePromptModel struct {
@@ -18,17 +18,22 @@ type WorkspacePromptModel struct {
 	currentDir    string
 	validatePath  func(string) error
 	errorMessage  string
-	confirmed     bool
 	confirmedPath string
-	width         int
-	ready         bool
+	done          bool
 }
 
 func NewWorkspacePromptModel(currentDir string, validatePath func(string) error) WorkspacePromptModel {
+	terminalSize, err := GetTerminalSize()
+	if err != nil {
+		// If we fail to get the terminal size, we can still proceed; we'll just set a default width.
+		terminalSize = TerminalSize{Width: 80, Height: 24}
+	}
+
 	ta := textarea.New()
-	ta.Placeholder = ""
+	ta.Placeholder = currentDir
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
+	ta.SetWidth(terminalSize.Width)
 	ta.SetHeight(1)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
@@ -44,42 +49,36 @@ func (m WorkspacePromptModel) Init() tea.Cmd {
 	return textarea.Blink
 }
 
+// Update handles incoming messages for the workspace prompt.
+//
+// It processes key events for confirming the workspace path, updates the textarea state,
+// and listens for window size changes to set the initial width of the textarea.
+//
+// The function should return the updated model and any commands to execute (e.g., tea.Quit
+// if the user presses Ctrl+C).
 func (m WorkspacePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// WindowSizeMsg is sent by the Bubble Tea runtime when the terminal size changes,
+	// including when the program first starts. We use it to set the width of our textarea
+	// and mark ourselves as ready to render.
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
 		m.textarea.SetWidth(msg.Width)
-		m.ready = true
 		return m, nil
 	}
 
-	if !m.ready {
-		return m, nil
-	}
-
+	// If the message is a reserved key event, handle it with our custom key handling logic.
 	if msg, ok := msg.(tea.KeyMsg); ok {
-		return m.handleKey(msg)
+		switch msg.String() {
+		// Go to next step on Enter
+		case "enter":
+			return m.handleEnter()
+		}
+		// Fall through.
 	}
 
 	var cmd tea.Cmd
-	m.textarea, cmd = m.textarea.Update(msg)
-	return m, cmd
-}
-
-func (m WorkspacePromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "ctrl+c":
-		return m, tea.Quit
-	case "enter":
-		return m.handleEnter()
-	case "alt+enter":
-		m.textarea.InsertString("\n")
-		m.errorMessage = ""
-		return m, nil
-	}
-
-	m.errorMessage = ""
-	var cmd tea.Cmd
+	// For all messages other than reserved key events, we pass them to the textarea component
+	// to handle them in the text area.
 	m.textarea, cmd = m.textarea.Update(msg)
 	return m, cmd
 }
@@ -87,6 +86,9 @@ func (m WorkspacePromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m WorkspacePromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	value := strings.TrimSpace(m.textarea.Value())
 
+	// If the user just presses Enter without typing anything, we treat it as confirming the
+	// current directory. Otherwise, we validate the entered path and set it as the confirmed
+	// workspace if it's valid.
 	if value == "" {
 		m.confirmedPath = m.currentDir
 	} else {
@@ -97,29 +99,30 @@ func (m WorkspacePromptModel) handleEnter() (tea.Model, tea.Cmd) {
 		m.confirmedPath = value
 	}
 
-	m.confirmed = true
+	// We're done here.
+	m.done = true
 	m.errorMessage = ""
-	return m, tea.Quit
+	var b strings.Builder
+	b.WriteString(renderAgentInactivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir)))
+	b.WriteByte('\n')
+	b.WriteString(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)))
+	return m, func() tea.Msg {
+		return WorkspacePromptResult{
+			Path: m.confirmedPath,
+			View: b.String(),
+		}
+	}
 }
 
 func (m WorkspacePromptModel) View() string {
-	if !m.ready {
-		return "Initializing..."
-	}
-	if m.confirmed {
-		var b strings.Builder
-		b.WriteString(PromptLabelStyle.Render(fmt.Sprintf("Current directory: %s", m.currentDir)))
-		b.WriteByte('\n')
-		b.WriteString(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)))
-		b.WriteString("\n\n")
-		return b.String()
+	if m.done {
+		return ""
 	}
 
 	var b strings.Builder
-
-	b.WriteString(PromptLabelStyle.Render(fmt.Sprintf("Current directory: %s", m.currentDir)))
+	b.WriteString(renderAgentActivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir)))
 	b.WriteByte('\n')
-	b.WriteString("Press Enter to confirm, or type an absolute path. (Alt+Enter for newline)")
+	b.WriteString("Press Enter to confirm, or type an absolute path.")
 	b.WriteByte('\n')
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.View())
@@ -132,11 +135,4 @@ func (m WorkspacePromptModel) View() string {
 	b.WriteByte('\n')
 
 	return b.String()
-}
-
-func (m WorkspacePromptModel) Result() WorkspacePromptResult {
-	return WorkspacePromptResult{
-		Path:      m.confirmedPath,
-		Cancelled: !m.confirmed,
-	}
 }

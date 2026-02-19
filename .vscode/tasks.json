@@ -1,0 +1,108 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "vet"
+            ],
+            "group": "build",
+            "label": "Check",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "test"
+            ],
+            "group": "build",
+            "label": "Test",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "build"
+            ],
+            "group": "build",
+            "label": "Build",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "Check",
+                "Test"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "type": "shell",
+            "command": "go",
+            "args": [
+                "run",
+                "${workspaceFolder}"
+            ],
+            "group": "build",
+            "label": "Run",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
+            },
+            "dependsOn": "Build",
+            "dependsOrder": "sequence",
+            "runOptions": {
+                "instanceLimit": 100
+            }
+        }
+    ]
+}

@@ -10,7 +10,12 @@
     "customizations": {
         "vscode": {
             "settings": {
-                "debug.allowBreakpointsEverywhere": true
+                "debug.allowBreakpointsEverywhere": true,
+                "[go]": {
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "always"
+                    }
+                }
             },
             "extensions": [
                 "github.copilot-chat",

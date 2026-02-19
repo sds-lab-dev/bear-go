@@ -123,11 +123,22 @@ func buildCommand(c *Client, systemPromptPath, jsonSchema string) *exec.Cmd {
 	cmd := exec.Command(c.binaryPath, args...)
 	cmd.Dir = c.workingDir
 	cmd.Env = append(os.Environ(),
-		"ANTHROPIC_API_KEY="+c.apiKey,
 		"CLAUDE_CODE_EFFORT_LEVEL=high",
 		"CLAUDE_CODE_DISABLE_AUTO_MEMORY=0",
 		"CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1",
 	)
+	// If an API key is provided, use the key to authenticate with the Anthropic API.
+	// If no API key is provided, the claude binary will attempt to use a subscription plan if
+	// available, but this may fail if the key is required for authentication, in which case an
+	// error will be returned.
+	if c.apiKey != "" {
+		cmd.Env = append(cmd.Env, "ANTHROPIC_API_KEY="+c.apiKey)
+	}
+	fmt.Printf("Running command: %v\n", cmd.String())
+	fmt.Printf("With working directory: %s\n", cmd.Dir)
+	for _, env := range cmd.Env {
+		fmt.Printf("With environment variable: %s\n", env)
+	}
 
 	return cmd
 }

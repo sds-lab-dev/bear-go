@@ -11,8 +11,8 @@ import (
 )
 
 type UserRequestPromptResult struct {
-	Text      string
-	Cancelled bool
+	Text string
+	View string
 }
 
 type editorFinishedMsg struct {
@@ -26,18 +26,24 @@ type UserRequestPromptModel struct {
 	errorMessage    string
 	confirmed       bool
 	confirmedText   string
-	width           int
-	ready           bool
 	resolveEditor   func() (EditorCommand, error)
 	tempFilePath    string
 	launchingEditor bool
 }
 
 func NewUserRequestPromptModel() UserRequestPromptModel {
+	terminalSize, err := GetTerminalSize()
+	if err != nil {
+		// If we fail to get the terminal size, we can still proceed; we'll just set a default width.
+		terminalSize = TerminalSize{Width: 80, Height: 24}
+	}
+
 	ta := textarea.New()
 	ta.Placeholder = ""
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
+	ta.SetWidth(terminalSize.Width)
+	ta.SetHeight(terminalSize.Height / 2)
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
 
@@ -61,14 +67,8 @@ func (m UserRequestPromptModel) Init() tea.Cmd {
 func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
 		m.textarea.SetWidth(msg.Width)
 		m.textarea.SetHeight(msg.Height / 2)
-		m.ready = true
-		return m, nil
-	}
-
-	if !m.ready {
 		return m, nil
 	}
 
@@ -88,8 +88,6 @@ func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c":
-		return m, tea.Quit
 	case "enter":
 		return m.handleEnter()
 	case "shift+enter", "alt+enter":
@@ -113,10 +111,20 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// We're done here.
 	m.confirmed = true
 	m.confirmedText = value
 	m.errorMessage = ""
-	return m, tea.Quit
+	var b strings.Builder
+	b.WriteString(renderAgentInactivePrompt("You requested as follows:"))
+	b.WriteByte('\n')
+	b.WriteString(m.textarea.Value())
+	return m, func() tea.Msg {
+		return UserRequestPromptResult{
+			Text: m.confirmedText,
+			View: b.String(),
+		}
+	}
 }
 
 func (m UserRequestPromptModel) prepareEditorLaunch() (tea.Model, tea.Cmd) {
@@ -189,19 +197,13 @@ func (m *UserRequestPromptModel) cleanupTempFile() {
 }
 
 func (m UserRequestPromptModel) View() string {
-	if !m.ready {
-		return "Initializing..."
-	}
-	if m.confirmed {
-		return ""
-	}
-	if m.launchingEditor {
+	if m.confirmed || m.launchingEditor {
 		return ""
 	}
 
 	var b strings.Builder
 
-	b.WriteString(PromptLabelStyle.Render("Enter your request:"))
+	b.WriteString(renderAgentActivePrompt("Enter your request:"))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, Shift+Enter or Alt+Enter for newline, Ctrl+G for external editor.")
 	b.WriteByte('\n')
@@ -216,11 +218,4 @@ func (m UserRequestPromptModel) View() string {
 	b.WriteByte('\n')
 
 	return b.String()
-}
-
-func (m UserRequestPromptModel) Result() UserRequestPromptResult {
-	return UserRequestPromptResult{
-		Text:      m.confirmedText,
-		Cancelled: !m.confirmed,
-	}
 }

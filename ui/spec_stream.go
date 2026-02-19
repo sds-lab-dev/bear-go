@@ -51,6 +51,8 @@ func (m SpecStreamModel) Init() tea.Cmd {
 	return func() tea.Msg {
 		go func() {
 			callback := func(msg claudecode.StreamMessage) {
+				// DEBUG
+				fmt.Printf("Received stream message: %+v\n", msg)
 				m.eventCh <- streamEventMsg{message: msg}
 			}
 
@@ -121,7 +123,7 @@ func (m SpecStreamModel) View() string {
 	var b strings.Builder
 
 	if !m.done {
-		b.WriteString(AgentActivityStyle.Render("Spec agent is analyzing your request..."))
+		b.WriteString(renderAgentActivePrompt("Spec agent is analyzing your request..."))
 		b.WriteByte('\n')
 		for _, line := range m.messages {
 			b.WriteString(DescriptionStyle.Render(line))
@@ -142,7 +144,7 @@ func (m SpecStreamModel) View() string {
 		return b.String()
 	}
 
-	b.WriteString(PromptLabelStyle.Render("Clarification questions:"))
+	b.WriteString(renderAgentInactivePrompt("Clarification questions:"))
 	b.WriteByte('\n')
 	for i, q := range m.result.Questions {
 		b.WriteString(QuestionStyle.Render(fmt.Sprintf("%d. %s", i+1, q)))

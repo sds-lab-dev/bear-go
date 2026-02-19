@@ -1,14 +1,16 @@
 package app
 
-import "errors"
+import "os"
 
-var ErrAPIKeyNotSet = errors.New("ANTHROPIC_API_KEY environment variable is not set or empty")
-
-func ValidateAPIKeyEnv(lookupEnv func(string) (string, bool)) (string, error) {
-	value, ok := lookupEnv("ANTHROPIC_API_KEY")
-	if !ok || value == "" {
-		return "", ErrAPIKeyNotSet
+func getAPIKeyFromEnvVar(lookupEnvFunction func(string) (string, bool)) string {
+	if lookupEnvFunction == nil {
+		lookupEnvFunction = os.LookupEnv
 	}
 
-	return value, nil
+	value, ok := lookupEnvFunction("ANTHROPIC_API_KEY")
+	if !ok || value == "" {
+		return ""
+	}
+
+	return value
 }
