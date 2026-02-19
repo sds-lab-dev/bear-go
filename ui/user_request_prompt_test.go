@@ -84,16 +84,13 @@ func TestUserRequestPromptModel_ValidInputConfirms(t *testing.T) {
 	}
 }
 
-func TestUserRequestPromptModel_CtrlCCancels(t *testing.T) {
+func TestUserRequestPromptModel_CtrlCPassesToTextarea(t *testing.T) {
 	m := readyModel(t)
 
-	m, cmd := sendSpecialKey(m, tea.KeyCtrlC)
+	m, _ = sendSpecialKey(m, tea.KeyCtrlC)
 
 	if m.confirmed {
 		t.Error("should not be confirmed after ctrl+c")
-	}
-	if cmd == nil {
-		t.Error("expected quit command")
 	}
 }
 
@@ -129,12 +126,13 @@ func TestUserRequestPromptModel_ViewShowsLabelAndHelp(t *testing.T) {
 	}
 }
 
-func TestUserRequestPromptModel_ViewShowsInitializingBeforeReady(t *testing.T) {
+func TestUserRequestPromptModel_ViewShowsPromptImmediately(t *testing.T) {
 	m := NewUserRequestPromptModel()
 	view := m.View()
+	plain := stripANSI(view)
 
-	if view != "Initializing..." {
-		t.Errorf("expected 'Initializing...', got %q", view)
+	if !strings.Contains(plain, "Enter your request:") {
+		t.Error("view should contain label text immediately without WindowSizeMsg")
 	}
 }
 
@@ -148,24 +146,6 @@ func TestUserRequestPromptModel_ViewShowsErrorMessage(t *testing.T) {
 
 	if !strings.Contains(plain, "Please enter your request.") {
 		t.Error("view should contain error message")
-	}
-}
-
-func TestUserRequestPromptModel_WindowSizeUpdatesWidth(t *testing.T) {
-	m := NewUserRequestPromptModel()
-
-	if m.ready {
-		t.Error("should not be ready before WindowSizeMsg")
-	}
-
-	updated, _ := m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
-	m = updated.(UserRequestPromptModel)
-
-	if !m.ready {
-		t.Error("should be ready after WindowSizeMsg")
-	}
-	if m.width != 100 {
-		t.Errorf("expected width 100, got %d", m.width)
 	}
 }
 

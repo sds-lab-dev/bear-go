@@ -28,7 +28,8 @@
             "type": "shell",
             "command": "go",
             "args": [
-                "test"
+                "test",
+                "${workspaceFolder}/..."
             ],
             "group": "build",
             "label": "Test",
