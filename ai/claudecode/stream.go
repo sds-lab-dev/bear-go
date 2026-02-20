@@ -93,8 +93,9 @@ type ContentBlock struct {
 	Name string `json:"name"`
 	// Used when Type is "tool_use".
 	Input json.RawMessage `json:"input"`
-	// Used when Type is "tool_result".
-	Content string `json:"content"`
+	// Used when Type is "tool_result". This field can be both string and array of JSON
+	// objects, so we use json.RawMessage.
+	Content json.RawMessage `json:"content"`
 	// Used when Type is "thinking".
 	Thinking string `json:"thinking"`
 }
@@ -134,11 +135,11 @@ func (content ContentBlock) StreamMessageContent() string {
 		}
 		return fmt.Sprintf("%v: %v", content.Name, string(content.Input))
 	case "tool_result":
-		if content.Content == "" {
+		if len(content.Content) == 0 {
 			log.Warning("tool_result content block has empty content")
 			return "empty tool_result content"
 		}
-		return content.Content
+		return string(content.Content)
 	case "thinking":
 		if content.Thinking == "" {
 			log.Warning("thinking content block has empty thinking text")
