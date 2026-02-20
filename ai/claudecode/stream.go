@@ -45,7 +45,7 @@ func (msg StreamMessage) toAiStreamMessage() ai.StreamMessage {
 }
 
 type Message struct {
-	// Role can be "user", or "assistant".
+	// Role can be "user" or "assistant".
 	Role string `json:"role"`
 	// Used when Role is "assistant".
 	Model string `json:"model"`
