@@ -109,10 +109,10 @@ func TestQuery_EnvironmentVariablesSet(t *testing.T) {
 	}
 
 	expected := map[string]string{
-		"ANTHROPIC_API_KEY":                    "sk-test-api-key",
-		"CLAUDE_CODE_EFFORT_LEVEL":             "high",
-		"CLAUDE_CODE_DISABLE_AUTO_MEMORY":      "0",
-		"CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY":  "1",
+		"ANTHROPIC_API_KEY":                   "sk-test-api-key",
+		"CLAUDE_CODE_EFFORT_LEVEL":            "high",
+		"CLAUDE_CODE_DISABLE_AUTO_MEMORY":     "0",
+		"CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
 	}
 
 	for key, want := range expected {
@@ -180,7 +180,8 @@ func TestQuery_SystemPromptTempFileCleanup(t *testing.T) {
 	countBefore := countTempFiles(t, "bear-system-prompt-")
 
 	// echo는 빈 출력으로 ErrNoResultReceived를 반환하지만, 임시 파일은 정리되어야 한다.
-	_, _ = c.Query("test prompt", "test user prompt", `{"type":"object"}`, func(msg StreamMessage) {})
+	type dummyOutput struct{}
+	_, _ = query[dummyOutput](c, "test prompt", "test user prompt")
 
 	countAfter := countTempFiles(t, "bear-system-prompt-")
 
@@ -221,8 +222,9 @@ func TestQuery_StdinReceivesUserPrompt(t *testing.T) {
 		binaryPath: scriptFile,
 	}
 
+	type dummyOutput struct{}
 	userPrompt := "my user prompt text"
-	_, _ = c.Query("system prompt", userPrompt, `{"type":"object"}`, func(msg StreamMessage) {})
+	_, _ = query[dummyOutput](c, "system prompt", userPrompt)
 
 	captured, err := os.ReadFile(outputFile)
 	if err != nil {

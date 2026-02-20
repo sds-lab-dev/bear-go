@@ -8,11 +8,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/sds-lab-dev/bear-go/log"
 )
 
 type UserRequestPromptResult struct {
 	Text string
-	View string
 }
 
 type editorFinishedMsg struct {
@@ -24,22 +24,16 @@ type startEditorMsg struct{}
 type UserRequestPromptModel struct {
 	textarea        textarea.Model
 	errorMessage    string
-	confirmed       bool
-	confirmedText   string
 	resolveEditor   func() (EditorCommand, error)
 	tempFilePath    string
 	launchingEditor bool
 }
 
 func NewUserRequestPromptModel() UserRequestPromptModel {
-	terminalSize, err := GetTerminalSize()
-	if err != nil {
-		// If we fail to get the terminal size, we can still proceed; we'll just set a default width.
-		terminalSize = TerminalSize{Width: 80, Height: 24}
-	}
+	terminalSize := GetTerminalSize()
 
 	ta := textarea.New()
-	ta.Placeholder = ""
+	ta.Placeholder = "Implement a function that calculates the factorial of a number."
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
 	ta.SetWidth(terminalSize.Width)
@@ -65,8 +59,11 @@ func (m UserRequestPromptModel) Init() tea.Cmd {
 }
 
 func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received update message in UserRequestPromptModel: %#v", msg))
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		log.Debug(fmt.Sprintf("received window size message: width=%d, height=%d", msg.Width, msg.Height))
 		m.textarea.SetWidth(msg.Width)
 		m.textarea.SetHeight(msg.Height / 2)
 		return m, nil
@@ -87,6 +84,8 @@ func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received key message: type=%v", msg.String()))
+
 	switch msg.String() {
 	case "enter":
 		return m.handleEnter()
@@ -105,6 +104,8 @@ func (m UserRequestPromptModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
+	log.Debug("Enter key pressed, handling user request confirmation")
+
 	value := strings.TrimSpace(m.textarea.Value())
 	if value == "" {
 		m.errorMessage = "Please enter your request."
@@ -112,27 +113,33 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	}
 
 	// We're done here.
-	m.confirmed = true
-	m.confirmedText = value
 	m.errorMessage = ""
 	var b strings.Builder
-	b.WriteString(renderAgentInactivePrompt("You requested as follows:"))
+
+	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render("You requested as follows:")))
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.Value())
-	return m, func() tea.Msg {
-		return UserRequestPromptResult{
-			Text: m.confirmedText,
-			View: b.String(),
-		}
-	}
+
+	cmd := tea.Sequence(
+		tea.Printf("%v\n", b.String()),
+		func() tea.Msg {
+			return UserRequestPromptResult{
+				Text: value,
+			}
+		},
+	)
+	return m, cmd
 }
 
 func (m UserRequestPromptModel) prepareEditorLaunch() (tea.Model, tea.Cmd) {
+	log.Debug("preparing to launch external editor for user request input")
 	m.launchingEditor = true
 	return m, func() tea.Msg { return startEditorMsg{} }
 }
 
 func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
+	log.Debug("launching external editor for user request input")
+
 	editorCmd, err := m.resolveEditor()
 	if err != nil {
 		m.launchingEditor = false
@@ -146,6 +153,7 @@ func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
 		m.errorMessage = fmt.Sprintf("Failed to create temp file: %v", err)
 		return m, nil
 	}
+	log.Debug(fmt.Sprintf("created temp file for editor input: %s", tmpFile.Name()))
 
 	content := m.textarea.Value()
 	if _, err := tmpFile.WriteString(content); err != nil {
@@ -168,6 +176,8 @@ func (m UserRequestPromptModel) handleEditorLaunch() (tea.Model, tea.Cmd) {
 }
 
 func (m UserRequestPromptModel) handleEditorFinished(msg editorFinishedMsg) (tea.Model, tea.Cmd) {
+	log.Debug("external editor process finished for user request input")
+
 	m.launchingEditor = false
 
 	if msg.err != nil {
@@ -191,30 +201,30 @@ func (m UserRequestPromptModel) handleEditorFinished(msg editorFinishedMsg) (tea
 
 func (m *UserRequestPromptModel) cleanupTempFile() {
 	if m.tempFilePath != "" {
+		log.Debug(fmt.Sprintf("cleaning up temp file: %s", m.tempFilePath))
 		os.Remove(m.tempFilePath)
 		m.tempFilePath = ""
 	}
 }
 
 func (m UserRequestPromptModel) View() string {
-	if m.confirmed || m.launchingEditor {
+	log.Debug(fmt.Sprintf("rendering user request prompt view: launchingEditor=%v, errorMessage=%v", m.launchingEditor, m.errorMessage))
+
+	if m.launchingEditor {
 		return ""
 	}
 
 	var b strings.Builder
-
 	b.WriteString(renderAgentActivePrompt("Enter your request:"))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, Shift+Enter or Alt+Enter for newline, Ctrl+G for external editor.")
 	b.WriteByte('\n')
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.View())
-
 	if m.errorMessage != "" {
 		b.WriteByte('\n')
 		b.WriteString(ErrorStyle.Render(m.errorMessage))
 	}
-
 	b.WriteByte('\n')
 
 	return b.String()

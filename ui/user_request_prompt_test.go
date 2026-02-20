@@ -41,9 +41,6 @@ func TestUserRequestPromptModel_EmptyInputShowsError(t *testing.T) {
 	if m.errorMessage == "" {
 		t.Error("expected error message for empty input")
 	}
-	if m.confirmed {
-		t.Error("should not be confirmed on empty input")
-	}
 }
 
 func TestUserRequestPromptModel_WhitespaceOnlyInputShowsError(t *testing.T) {
@@ -58,39 +55,6 @@ func TestUserRequestPromptModel_WhitespaceOnlyInputShowsError(t *testing.T) {
 
 	if m.errorMessage == "" {
 		t.Error("expected error message for whitespace-only input")
-	}
-	if m.confirmed {
-		t.Error("should not be confirmed on whitespace-only input")
-	}
-}
-
-func TestUserRequestPromptModel_ValidInputConfirms(t *testing.T) {
-	m := readyModel(t)
-
-	for _, r := range "implement login feature" {
-		m, _ = sendKey(m, string(r))
-	}
-
-	m, cmd := sendSpecialKey(m, tea.KeyEnter)
-
-	if !m.confirmed {
-		t.Error("should be confirmed after valid input")
-	}
-	if m.confirmedText != "implement login feature" {
-		t.Errorf("expected 'implement login feature', got %q", m.confirmedText)
-	}
-	if cmd == nil {
-		t.Error("expected quit command")
-	}
-}
-
-func TestUserRequestPromptModel_CtrlCPassesToTextarea(t *testing.T) {
-	m := readyModel(t)
-
-	m, _ = sendSpecialKey(m, tea.KeyCtrlC)
-
-	if m.confirmed {
-		t.Error("should not be confirmed after ctrl+c")
 	}
 }
 

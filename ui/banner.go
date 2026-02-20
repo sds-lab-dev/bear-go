@@ -25,8 +25,6 @@ const (
 	descriptionText        = "Bear does the heavy lifting for you; you just collect your paycheck and don't worry about a thing."
 )
 
-var MinTerminalWidth = bearArtWidth + bearArtGap + 1
-
 func calcBearArtWidth() int {
 	maxWidth := 0
 	for _, line := range bearArtLines {

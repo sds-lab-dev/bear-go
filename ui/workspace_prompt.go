@@ -6,11 +6,12 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/sds-lab-dev/bear-go/log"
 )
 
 type WorkspacePromptResult struct {
 	Path string
-	View string
 }
 
 type WorkspacePromptModel struct {
@@ -19,15 +20,10 @@ type WorkspacePromptModel struct {
 	validatePath  func(string) error
 	errorMessage  string
 	confirmedPath string
-	done          bool
 }
 
 func NewWorkspacePromptModel(currentDir string, validatePath func(string) error) WorkspacePromptModel {
-	terminalSize, err := GetTerminalSize()
-	if err != nil {
-		// If we fail to get the terminal size, we can still proceed; we'll just set a default width.
-		terminalSize = TerminalSize{Width: 80, Height: 24}
-	}
+	terminalSize := GetTerminalSize()
 
 	ta := textarea.New()
 	ta.Placeholder = currentDir
@@ -57,11 +53,14 @@ func (m WorkspacePromptModel) Init() tea.Cmd {
 // The function should return the updated model and any commands to execute (e.g., tea.Quit
 // if the user presses Ctrl+C).
 func (m WorkspacePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received update message in WorkspacePromptModel: %#v", msg))
+
 	// WindowSizeMsg is sent by the Bubble Tea runtime when the terminal size changes,
 	// including when the program first starts. We use it to set the width of our textarea
 	// and mark ourselves as ready to render.
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		log.Debug(fmt.Sprintf("received window size message: width=%d, height=%d", msg.Width, msg.Height))
 		m.textarea.SetWidth(msg.Width)
 		return m, nil
 	}
@@ -71,14 +70,16 @@ func (m WorkspacePromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		// Go to next step on Enter
 		case "enter":
+			log.Debug("Enter key pressed, handling workspace confirmation")
 			return m.handleEnter()
 		}
 		// Fall through.
 	}
 
 	var cmd tea.Cmd
-	// For all messages other than reserved key events, we pass them to the textarea component
-	// to handle them in the text area.
+	// For all other messages, we pass them to the textarea component to handle them in the text
+	// area.
+	log.Debug(fmt.Sprintf("passing message of type %T to textarea component", msg))
 	m.textarea, cmd = m.textarea.Update(msg)
 	return m, cmd
 }
@@ -100,38 +101,37 @@ func (m WorkspacePromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	}
 
 	// We're done here.
-	m.done = true
 	m.errorMessage = ""
 	var b strings.Builder
-	b.WriteString(renderAgentInactivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir)))
-	b.WriteByte('\n')
-	b.WriteString(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)))
-	return m, func() tea.Msg {
-		return WorkspacePromptResult{
-			Path: m.confirmedPath,
-			View: b.String(),
-		}
-	}
+	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath))))
+	log.Info(fmt.Sprintf("Workspace confirmed: %s", m.confirmedPath))
+	cmd := tea.Sequence(
+		tea.Printf("%v\n", b.String()),
+		func() tea.Msg {
+			return WorkspacePromptResult{
+				Path: m.confirmedPath,
+			}
+		},
+	)
+
+	return m, cmd
 }
 
 func (m WorkspacePromptModel) View() string {
-	if m.done {
-		return ""
-	}
-
 	var b strings.Builder
+
+	log.Debug(fmt.Sprintf("rendering workspace prompt view: errorMessage=%v", m.errorMessage))
+
 	b.WriteString(renderAgentActivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir)))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, or type an absolute path.")
 	b.WriteByte('\n')
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.View())
-
 	if m.errorMessage != "" {
 		b.WriteByte('\n')
 		b.WriteString(ErrorStyle.Render(m.errorMessage))
 	}
-
 	b.WriteByte('\n')
 
 	return b.String()

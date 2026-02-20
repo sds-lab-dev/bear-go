@@ -3,30 +3,40 @@ package app
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/sds-lab-dev/bear-go/ai"
+	"github.com/sds-lab-dev/bear-go/log"
 	"github.com/sds-lab-dev/bear-go/ui"
 )
 
-type mainState int
+type mainModelState int
 
 const (
-	stateWorkspace mainState = iota
-	stateUserRequest
-	stateSpecDrafting
-	stateDone
+	mainStateWorkspaceDir mainModelState = iota
+	mainStateUserRequest
+	mainStateSpecDrafting
+	mainStateDone
+	mainStateSwitching
 )
 
+type stateSwitchMsg struct {
+	newState mainModelState
+	newModel tea.Model
+}
+
 type mainModel struct {
-	state         mainState
+	sessionID     string
+	state         mainModelState
 	currentModel  tea.Model
 	mainHeaderCmd tea.Cmd
 	workspacePath string
+	aiPorts       ai.Ports
+	err           error
 }
 
-func newMainModel() (mainModel, error) {
+func newMainModel(sessionID string, aiPorts ai.Ports) (mainModel, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return mainModel{}, fmt.Errorf("failed to get current working directory: %w", err)
@@ -38,66 +48,96 @@ func newMainModel() (mainModel, error) {
 	}
 
 	return mainModel{
-		state: stateWorkspace,
+		sessionID: sessionID,
+		state:     mainStateWorkspaceDir,
 		currentModel: ui.NewWorkspacePromptModel(
 			cwd,
 			ValidateWorkspacePath,
 		),
 		mainHeaderCmd: mainHeaderCmd,
+		aiPorts:       aiPorts,
+		err:           nil,
 	}, nil
 }
 
 func buildMainHeader() (tea.Cmd, error) {
-	var b strings.Builder
-
-	apiKey := getAPIKeyFromEnvVar(nil)
-	if apiKey == "" {
-		b.WriteString(ui.ErrorStyle.Render("ANTHROPIC_API_KEY environment variable is not set or empty; trying to use a subscription plan, but this may fail if the key is required for authentication"))
-		b.WriteByte('\n')
-	}
-
-	terminalSize, err := ui.GetTerminalSize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to query terminal size: %w", err)
-	}
+	terminalSize := ui.GetTerminalSize()
 	if terminalSize.Width < ui.MinTerminalWidth {
 		return nil, fmt.Errorf("terminal too narrow (%d columns); at least %d columns required", terminalSize.Width, ui.MinTerminalWidth)
 	}
-	b.WriteString(ui.RenderBanner(terminalSize.Width))
 
-	return tea.Println(b.String()), nil
+	return tea.Println(ui.RenderBanner(terminalSize.Width)), nil
 }
 
 func (m mainModel) Init() tea.Cmd {
+	if m.currentModel == nil {
+		panic("currentModel must be initialized before calling Init()")
+	}
+
 	return tea.Sequence(m.mainHeaderCmd, m.currentModel.Init())
 }
 
+func (m mainModel) switchModel(newState mainModelState, newModel tea.Model, cmd tea.Cmd) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("switching main model state from %v to %v", m.state, newState))
+
+	m.state = mainStateSwitching
+	cmd = tea.Sequence(
+		func() tea.Msg {
+			return stateSwitchMsg{
+				newState: newState,
+				newModel: newModel,
+			}
+		},
+		cmd,
+	)
+	return m, cmd
+}
+
 func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Bubbletea message handling
+	log.Debug(fmt.Sprintf("main model received update message of type %#v in state %v", msg, m.state))
+
 	switch msg := msg.(type) {
-	// Global key handling (e.g., Ctrl+C to quit)
 	case tea.KeyMsg:
+		// Global key handling (e.g., Ctrl+C to quit)
 		if msg.Type == tea.KeyCtrlC {
 			return m, tea.Quit
 		}
-	// Terminal resize handling
-	case tea.WindowSizeMsg:
-
-	}
-
-	// Internal message handling
-	switch msg := msg.(type) {
+	case stateSwitchMsg:
+		// This internal message is used to switch between sub-models to ensure that the
+		// mainModel clears the terminal and re-renders the new sub-model cleanly when
+		// transitioning between states.
+		//
+		// Sub-models DO NOT need to worry about clearing the terminal when they finish, they
+		// can just send a message to the mainModel to inform the final result of the sub-model.
+		m.state = msg.newState
+		m.currentModel = msg.newModel
+		return m, m.currentModel.Init()
 	case ui.WorkspacePromptResult:
 		m.workspacePath = msg.Path
-		m.state = stateUserRequest
-		m.currentModel = ui.NewUserRequestPromptModel()
-		return m, tea.Sequence(tea.Printf("%v\n", msg.View), m.currentModel.Init())
+		return m.switchModel(mainStateUserRequest, ui.NewUserRequestPromptModel(), nil)
 	case ui.UserRequestPromptResult:
-		// TODO: next state and model
-		return m, tea.Sequence(tea.Printf("%v\n", msg.View), tea.Quit)
+		session, err := m.aiPorts.NewSession(m.workspacePath)
+		if err != nil {
+			m.err = fmt.Errorf("failed to create AI session: %w", err)
+			return m, tea.Quit
+		}
+		return m.switchModel(mainStateSpecDrafting, ui.NewSpecPromptModel(msg.Text, session), nil)
+	case ui.SpecPromptResult:
+		if msg.Err != nil {
+			m.err = fmt.Errorf("spec prompt failed: %w", msg.Err)
+			return m, tea.Quit
+		}
+		return m.switchModel(mainStateDone, nil, tea.Quit)
 	}
 
-	// Delegate to the current sub-model
+	// For all other messages, delegate them to the current sub-model.
+	//
+	// IMPORTANT:
+	// You MUST NOT return the sub-model directly here, as that would lose the mainModel
+	// and break the main loop. Instead, you MUST update the currentModel field of the
+	// mainModel with the updated sub-model returned from the Update call, and then return
+	// the mainModel itself.
+	log.Debug(fmt.Sprintf("delegating message to current sub-model of type %T: %#v", m.currentModel, msg))
 	updatedModel, cmd := m.currentModel.Update(msg)
 	m.currentModel = updatedModel
 
@@ -105,19 +145,43 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m mainModel) View() string {
+	log.Debug(fmt.Sprintf("main model rendering view in state %v with current sub-model of type %T", m.state, m.currentModel))
+
+	// m.currentModel is allowed to be nil here that means we don't have a sub-model to render
+	// anymore (e.g., we've finished all the steps).
+	if m.currentModel == nil {
+		return ""
+	}
+
 	return m.currentModel.View()
 }
 
-func Run() error {
-	mainModel, err := newMainModel()
+func appMain(sessionID string, aiPorts ai.Ports) error {
+	model, err := newMainModel(sessionID, aiPorts)
 	if err != nil {
-		return fmt.Errorf("failed to initialize main model: %w", err)
+		return fmt.Errorf("failed to initialize main model: %v", err)
 	}
 
-	mainProgram := tea.NewProgram(mainModel)
-	_, err = mainProgram.Run()
+	mainProgram := tea.NewProgram(model)
+	finalModel, err := mainProgram.Run()
 	if err != nil {
-		return fmt.Errorf("application main loop failed: %w", err)
+		return fmt.Errorf("application main loop failed: %v", err)
+	}
+
+	if model, ok := finalModel.(mainModel); ok && model.err != nil {
+		return fmt.Errorf("failed to run main model: %v", model.err)
+	}
+
+	return nil
+}
+
+func Run(sessionID string, aiPorts ai.Ports) {
+	log.InitLogger(sessionID)
+	defer log.CloseLogger()
+
+	if err := appMain(sessionID, aiPorts); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		log.Fatal(err.Error())
 	}
 
 	// workspaceModel := ui.NewWorkspacePromptModel(cwd, ValidateWorkspacePath)
@@ -169,6 +233,6 @@ func Run() error {
 	// if specResult.Err != nil {
 	// 	return fmt.Errorf("spec agent failed: %w", specResult.Err)
 	// }
-
-	return nil
+	//
+	// return nil
 }
