@@ -54,6 +54,7 @@ When you ask clarification questions, they MUST collectively cover the following
 ## Constraints
 
 - Provide 0–5 clarification questions total.
+- Do NOT bundle multiple questions into a single combined question. Instead, write each question as its own separate, individual question.
 - Each question should be precise, answerable, and non-overlapping.
 - Inspect the current workspace first using the available tools. Read the files required to understand the context and to avoid asking questions that are already answered by existing files.
 - Do NOT ask questions that you can infer from the workspace files.

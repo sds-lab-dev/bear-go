@@ -13,18 +13,31 @@ var (
 	InfoStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
 )
 
-func renderAgentActivePrompt(msg string) string {
+func renderAgentActivePrompt(msg string, prefixDot bool) string {
 	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#1C5A8B"))
 	promptStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("4")).Bold(true)
 
-	return prefixStyle.Render("● ") + promptStyle.Render(msg)
+	var result string
+	if prefixDot {
+		result = prefixStyle.Render("● ") + promptStyle.Render(msg)
+	} else {
+		result = promptStyle.Render(msg)
+	}
+
+	return result
 }
 
-func renderAgentInactivePrompt(msg string) string {
+func renderAgentInactivePrompt(msg string, prefixDot bool) string {
 	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	promptStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
 
-	return prefixStyle.Render("● ") + promptStyle.Render(msg)
+	var result string
+	if prefixDot {
+		result = prefixStyle.Render("● ") + promptStyle.Render(msg)
+	} else {
+		result = promptStyle.Render(msg)
+	}
+	return result
 }
 
 func renderAgentThinking(msg string) string {

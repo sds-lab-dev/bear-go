@@ -116,7 +116,7 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	m.errorMessage = ""
 	var b strings.Builder
 
-	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render("You requested as follows:")))
+	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render("You requested as follows:"), true))
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.Value())
 
@@ -215,7 +215,7 @@ func (m UserRequestPromptModel) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(renderAgentActivePrompt("Enter your request:"))
+	b.WriteString(renderAgentActivePrompt("Enter your request:", true))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, Shift+Enter or Alt+Enter for newline, Ctrl+G for external editor.")
 	b.WriteByte('\n')

@@ -6,14 +6,14 @@ If, in your judgment, there are no remaining clarification questions that are ne
 
 ---
 
+# Output Format
+
+Your output MUST conform to the given JSON Schema.
+
+---
+
 # Initial User Request (verbatim)
 
 <<<
 {{INITIAL_USER_REQUEST_TEXT}}
 >>>
-
----
-
-# Output Format
-
-Your output MUST conform to the given JSON Schema.

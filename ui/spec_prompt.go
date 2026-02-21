@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/sds-lab-dev/bear-go/ai"
@@ -57,6 +58,7 @@ const (
 
 type SpecPromptModel struct {
 	textarea     textarea.Model
+	spinner      spinner.Model
 	specWriter   ai.SpecWriter
 	eventCh      chan tea.Msg
 	state        specPromptModelState
@@ -75,8 +77,12 @@ func NewSpecPromptModel(userRequest string, specWriter ai.SpecWriter) SpecPrompt
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
 
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+
 	model := SpecPromptModel{
 		textarea:     ta,
+		spinner:      s,
 		specWriter:   specWriter,
 		eventCh:      make(chan tea.Msg, 64),
 		state:        specStatePrepareClarifyingQuestions,
@@ -142,12 +148,16 @@ func (m SpecPromptModel) reviseSpec(feedback string) {
 }
 
 func (m SpecPromptModel) Init() tea.Cmd {
-	return func() tea.Msg {
-		log.Debug("waiting for event in Init()")
-		v := <-m.eventCh
-		log.Debug(fmt.Sprintf("received event in Init(): %#v", v))
-		return v
-	}
+	cmd := tea.Sequence(
+		m.spinner.Tick,
+		func() tea.Msg {
+			log.Debug("waiting for event in Init()")
+			v := <-m.eventCh
+			log.Debug(fmt.Sprintf("received event in Init(): %#v", v))
+			return v
+		},
+	)
+	return cmd
 }
 
 func (m SpecPromptModel) waitForNext() tea.Cmd {
@@ -246,10 +256,15 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.errorMessage = ""
 	var cmd tea.Cmd
-	// For all other messages, we pass them to the textarea component to handle them in the text
+	var sequence []tea.Cmd
+	// For all other messages, we pass them to the child components to handle them in the text
 	// area.
 	m.textarea, cmd = m.textarea.Update(msg)
-	return m, cmd
+	sequence = append(sequence, cmd)
+	m.spinner, cmd = m.spinner.Update(msg)
+	sequence = append(sequence, cmd)
+
+	return m, tea.Sequence(cmd)
 }
 
 func (m SpecPromptModel) handleEnter() (tea.Model, tea.Cmd) {
@@ -280,11 +295,11 @@ func (m SpecPromptModel) View() string {
 
 	switch m.state {
 	case specStatePrepareClarifyingQuestions:
-		b.WriteString(renderAgentActivePrompt("Analyzing your request to find out if there are any clarifying questions..."))
+		b.WriteString(renderAgentActivePrompt(fmt.Sprintf("%vAnalyzing your request to find out if there are any clarifying questions...", m.spinner.View()), false))
 		b.WriteByte('\n')
 		return b.String()
 	case specStateWaitUserAnswers:
-		b.WriteString(renderAgentActivePrompt("Please answer the clarifying questions above. Press Enter when you're done."))
+		b.WriteString(renderAgentActivePrompt("Please answer the clarifying questions above. Press Enter when you're done.", true))
 		b.WriteByte('\n')
 		b.WriteByte('\n')
 		b.WriteString(m.textarea.View())
@@ -294,11 +309,11 @@ func (m SpecPromptModel) View() string {
 		}
 		return b.String()
 	case specStateSpecDrafting:
-		b.WriteString(renderAgentActivePrompt("Drafting the spec based on your request and answers..."))
+		b.WriteString(renderAgentActivePrompt(fmt.Sprintf("%vDrafting the spec based on your request and answers...", m.spinner.View()), false))
 		b.WriteByte('\n')
 		return b.String()
 	case specStateWaitUserFeedback:
-		b.WriteString(renderAgentActivePrompt("Please review the drafted spec above and provide your feedback. Press Enter when you're done."))
+		b.WriteString(renderAgentActivePrompt("Please review the drafted spec above and provide your feedback. Press Enter when you're done.", true))
 		b.WriteByte('\n')
 		b.WriteByte('\n')
 		b.WriteString(m.textarea.View())

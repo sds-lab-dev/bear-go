@@ -52,6 +52,30 @@
             "type": "shell",
             "command": "go",
             "args": [
+                "fmt",
+                "${workspaceFolder}/..."
+            ],
+            "group": "build",
+            "label": "Format",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "shell",
+            "command": "go",
+            "args": [
                 "build"
             ],
             "group": "build",
@@ -72,7 +96,8 @@
             },
             "dependsOn": [
                 "Check",
-                "Test"
+                "Test",
+                "Format"
             ],
             "dependsOrder": "sequence"
         },

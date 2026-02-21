@@ -103,7 +103,7 @@ func (m WorkspacePromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	// We're done here.
 	m.errorMessage = ""
 	var b strings.Builder
-	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath))))
+	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)), true))
 	log.Info(fmt.Sprintf("Workspace confirmed: %s", m.confirmedPath))
 	cmd := tea.Sequence(
 		tea.Printf("%v\n", b.String()),
@@ -122,7 +122,7 @@ func (m WorkspacePromptModel) View() string {
 
 	log.Debug(fmt.Sprintf("rendering workspace prompt view: errorMessage=%v", m.errorMessage))
 
-	b.WriteString(renderAgentActivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir)))
+	b.WriteString(renderAgentActivePrompt(fmt.Sprintf("Current directory: %s", m.currentDir), true))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, or type an absolute path.")
 	b.WriteByte('\n')
