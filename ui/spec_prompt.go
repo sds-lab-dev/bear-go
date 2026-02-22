@@ -200,8 +200,8 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				fmt.Fprint(&b, "\n")
 			}
 		}
-		cmd := tea.Printf("Clarifying questions:\n%v\n", b.String())
-		return m, cmd
+		questions := fmt.Sprintf("%v\n%v", renderAgentInactivePrompt(SuccessStyle.Render("Clarifying questions:"), true), b.String())
+		return m, tea.Println(questions)
 	case userAnswersMsg:
 		log.Debug(fmt.Sprintf("received user answers message: %v", msg.answers))
 		// Go to next state to prepare clarifying questions based on user's answers.
