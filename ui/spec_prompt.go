@@ -105,6 +105,7 @@ func (m SpecPromptModel) getClarifyingQuestions(input string) {
 
 	questions, err := m.specWriter.GetInitialClarifyingQuestions(input)
 	if err != nil {
+		log.Debug(fmt.Sprintf("sending streamErrorMsg to the event channel: %#v", err))
 		m.eventCh <- streamErrorMsg{err: err}
 		return
 	}
@@ -187,9 +188,19 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 		return m, cmd
 	case clarifyingQuestionsMsg:
+		if len(msg.questions) == 0 {
+			panic("clarifying questions array should have at least one element")
+		}
 		log.Debug(fmt.Sprintf("received clarifying questions message: %v", msg.questions))
 		m.state = specStateWaitUserAnswers
-		cmd := tea.Printf("Clarifying questions:\n%v\n", strings.Join(msg.questions, "\n"))
+		var b strings.Builder
+		for i, s := range msg.questions {
+			fmt.Fprintf(&b, "%v. %v\n", i+1, s)
+			if i+1 < len(msg.questions) {
+				fmt.Fprint(&b, "\n")
+			}
+		}
+		cmd := tea.Printf("Clarifying questions:\n%v\n", b.String())
 		return m, cmd
 	case userAnswersMsg:
 		log.Debug(fmt.Sprintf("received user answers message: %v", msg.answers))

@@ -87,7 +87,9 @@ func (c *Client) GetInitialClarifyingQuestions(initialUserRequest string) ([]str
 	}
 	output, err := query[outputSchema](c, ai.ClarificationSystemPrompt(), ai.ClarificationUserPromptForInitialRequest(initialUserRequest))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get initial clarifying questions: %w", err)
+		err = fmt.Errorf("failed to get initial clarifying questions: %w", err)
+		log.Error(err.Error())
+		return nil, err
 	}
 	log.Debug(fmt.Sprintf("received initial clarifying questions: %#v", output))
 
@@ -199,11 +201,14 @@ func query[T any](client *Client, systemPrompt, userPrompt string) (T, error) {
 		io.Copy(&stderrBuf, stderr)
 	}()
 
+	log.Debug("starting Claude Code CLI process...")
 	result, streamErr := processStream(stdout, client.streamCallback)
-	waitErr := cmd.Wait()
 	if streamErr != nil {
 		return zeroValue, streamErr
 	}
+	log.Debug(fmt.Sprintf("waiting Claude Code CLI process: result=%v, streamErr=%v", string(result), streamErr))
+	waitErr := cmd.Wait()
+	log.Debug(fmt.Sprintf("finished Claude Code CLI process: waitErr=%v", waitErr))
 	if waitErr != nil {
 		return zeroValue, fmt.Errorf("%w: %s", ErrProcessExitError, stderrBuf.String())
 	}

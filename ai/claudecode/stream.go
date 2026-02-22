@@ -33,6 +33,8 @@ type StreamMessage struct {
 	Message Message `json:"message"`
 	// Used when Type is "result".
 	StructuredOutput json.RawMessage `json:"structured_output"`
+	// Used when Claude Code CLI does not log in.
+	Error string `json:"error"`
 	// Internal field to hold the original JSON line for debugging purposes.
 	RawJSON string `json:"-"`
 }
@@ -177,6 +179,14 @@ func processStream(reader io.Reader, streamCallback func(ai.StreamMessage)) (jso
 			return nil, fmt.Errorf("%w: %s", ErrStreamParseFailed, line)
 		}
 		msg.RawJSON = line
+		log.Debug(fmt.Sprintf("parsed stream message: %#v", msg))
+
+		if len(msg.Error) > 0 {
+			if msg.Error == "authentication_failed" {
+				return nil, errors.New("Claude Code CLI error: authentication failed: run `/login` first")
+			}
+			return nil, fmt.Errorf("Claude Code CLI error: %v", msg.Error)
+		}
 
 		switch msg.Type {
 		case StreamEventTypeAssistant, StreamEventTypeUser:
