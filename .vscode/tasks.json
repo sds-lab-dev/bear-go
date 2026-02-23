@@ -5,77 +5,6 @@
             "type": "shell",
             "command": "go",
             "args": [
-                "vet"
-            ],
-            "group": "build",
-            "label": "Check",
-            "presentation": {
-                "panel": "shared",
-                "clear": false,
-                "close": false
-            },
-            "options": {
-                "shell": {
-                    "executable": "/bin/bash",
-                    "args": [
-                        "--login",
-                        "-c"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "shell",
-            "command": "go",
-            "args": [
-                "test",
-                "${workspaceFolder}/..."
-            ],
-            "group": "build",
-            "label": "Test",
-            "presentation": {
-                "panel": "shared",
-                "clear": false,
-                "close": false
-            },
-            "options": {
-                "shell": {
-                    "executable": "/bin/bash",
-                    "args": [
-                        "--login",
-                        "-c"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "shell",
-            "command": "go",
-            "args": [
-                "fmt",
-                "${workspaceFolder}/..."
-            ],
-            "group": "build",
-            "label": "Format",
-            "presentation": {
-                "panel": "shared",
-                "clear": false,
-                "close": false
-            },
-            "options": {
-                "shell": {
-                    "executable": "/bin/bash",
-                    "args": [
-                        "--login",
-                        "-c"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "shell",
-            "command": "go",
-            "args": [
                 "build"
             ],
             "group": "build",
@@ -93,13 +22,7 @@
                         "-c"
                     ]
                 }
-            },
-            "dependsOn": [
-                "Check",
-                "Test",
-                "Format"
-            ],
-            "dependsOrder": "sequence"
+            }
         },
         {
             "type": "shell",
@@ -128,6 +51,120 @@
             "dependsOrder": "sequence",
             "runOptions": {
                 "instanceLimit": 100
+            }
+        },
+        {
+            "label": "Watch: go staticcheck",
+            "type": "shell",
+            "command": "watchexec",
+            "args": [
+                "--workdir",
+                "${workspaceFolder}",
+                "--exts",
+                "go",
+                "--watch",
+                "${workspaceFolder}",
+                "--debounce",
+                "1s",
+                "--on-busy-update",
+                "queue",
+                "-q",
+                "--",
+                "bash",
+                "${workspaceFolder}/.devcontainer/scripts/go_staticcheck.sh",
+                "${workspaceFolder}"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "base": "$go",
+                "owner": "watcher-staticcheck",
+                "source": "watcher-staticcheck",
+                "severity": "info",
+                "background": {
+                    "beginsPattern": "^__GO_STATICCHECK_BEGIN__$",
+                    "endsPattern": "^__GO_STATICCHECK_END__$"
+                }
+            },
+            "runOptions": {
+                "runOn": "folderOpen",
+                "instanceLimit": 1
+            },
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Watch: go fmt",
+            "type": "shell",
+            "command": "watchexec",
+            "args": [
+                "--workdir",
+                "${workspaceFolder}",
+                "--exts",
+                "go",
+                "--watch",
+                "${workspaceFolder}",
+                "--debounce",
+                "1s",
+                "--on-busy-update",
+                "queue",
+                "-q",
+                "--",
+                "bash",
+                "${workspaceFolder}/.devcontainer/scripts/go_fmt.sh",
+                "${workspaceFolder}"
+            ],
+            "isBackground": true,
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen",
+                "instanceLimit": 1
+            },
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Watch: go build",
+            "type": "shell",
+            "command": "watchexec",
+            "args": [
+                "--workdir",
+                "${workspaceFolder}",
+                "--exts",
+                "go,mod,sum",
+                "--watch",
+                "${workspaceFolder}",
+                "--debounce",
+                "1s",
+                "--on-busy-update",
+                "queue",
+                "-q",
+                "--",
+                "bash",
+                "${workspaceFolder}/.devcontainer/scripts/go_build.sh",
+                "${workspaceFolder}"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "base": "$go",
+                "owner": "watcher-build",
+                "source": "watcher-build",
+                "background": {
+                    "beginsPattern": "^__GO_BUILD_BEGIN__$",
+                    "endsPattern": "^__GO_BUILD_END__$"
+                }
+            },
+            "runOptions": {
+                "runOn": "folderOpen",
+                "instanceLimit": 1
+            },
+            "presentation": {
+                "reveal": "never",
+                "revealProblems": "onProblem",
+                "panel": "dedicated"
             }
         }
     ]
