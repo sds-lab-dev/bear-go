@@ -91,7 +91,9 @@
             },
             "presentation": {
                 "reveal": "never",
-                "panel": "dedicated"
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
             }
         },
         {
@@ -123,7 +125,9 @@
             },
             "presentation": {
                 "reveal": "never",
-                "panel": "dedicated"
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
             }
         },
         {
@@ -164,7 +168,9 @@
             "presentation": {
                 "reveal": "never",
                 "revealProblems": "onProblem",
-                "panel": "dedicated"
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
             }
         }
     ]
