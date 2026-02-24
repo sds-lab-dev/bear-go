@@ -180,10 +180,17 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.textarea.SetHeight(msg.Height / 2)
 		return m, nil
 	case streamEventMsg:
-		// TODO: 이벤트 메시지 유형에 따라 적절히 처리
 		log.Debug(fmt.Sprintf("received stream event message: type=%v, content=%v", msg.Type, msg.Content))
+
+		var content string
+		switch msg.Type {
+		case ai.StreamMessageTypeThinking:
+			content = renderAgentThinking(msg.Content)
+		default:
+			content = msg.Content
+		}
 		cmd := tea.Sequence(
-			tea.Printf("%v\n", msg.Content),
+			tea.Printf("%v\n", content),
 			m.waitForNext(),
 		)
 		return m, cmd
@@ -275,7 +282,7 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.spinner, cmd = m.spinner.Update(msg)
 	sequence = append(sequence, cmd)
 
-	return m, tea.Sequence(cmd)
+	return m, tea.Sequence(sequence...)
 }
 
 func (m SpecPromptModel) handleEnter() (tea.Model, tea.Cmd) {

@@ -11,7 +11,7 @@ type EditorCommand struct {
 }
 
 var ErrNoEditorFound = errors.New(
-	"No editor found. Please set the EDITOR environment variable or install 'code' or 'vi'.",
+	"no editor found. please set the EDITOR environment variable or install 'code' or 'vi'",
 )
 
 // resolveEditor는 사용할 외부 에디터를 결정한다.

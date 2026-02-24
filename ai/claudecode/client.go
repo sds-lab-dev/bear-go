@@ -214,7 +214,7 @@ func query[T any](client *Client, systemPrompt, userPrompt string) (T, error) {
 	}
 	log.Debug(fmt.Sprintf("raw result from processStream: %v", string(result)))
 
-	if validator := schema.Validate(result); validator.IsValid() == false {
+	if validator := schema.Validate(result); !validator.IsValid() {
 		err := validator.DetailedErrors()
 		return zeroValue, fmt.Errorf("JSON schema validation failed for type %T: %v", zeroValue, err)
 	}

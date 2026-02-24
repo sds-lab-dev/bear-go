@@ -183,9 +183,9 @@ func processStream(reader io.Reader, streamCallback func(ai.StreamMessage)) (jso
 
 		if len(msg.Error) > 0 {
 			if msg.Error == "authentication_failed" {
-				return nil, errors.New("Claude Code CLI error: authentication failed: run `/login` first")
+				return nil, errors.New("claude code CLI error: authentication failed: run `/login` first")
 			}
-			return nil, fmt.Errorf("Claude Code CLI error: %v", msg.Error)
+			return nil, fmt.Errorf("claude code CLI error: %v", msg.Error)
 		}
 
 		switch msg.Type {
