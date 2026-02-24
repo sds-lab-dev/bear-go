@@ -13,8 +13,17 @@ import (
 
 const API_KEY_ENV_VAR = "ANTHROPIC_API_KEY"
 
+var (
+	// buildVersion will be set at build time by Makefile. If the script fails
+	// for any reason, it will default to "unknown".
+	buildVersion = "unknown"
+)
+
 func main() {
-	app.Run(uuid.New().String(), aiSession{apiKey: getAPIKeyFromEnvVar()})
+	session := aiSession{
+		apiKey: getAPIKeyFromEnvVar(),
+	}
+	app.Run(buildVersion, uuid.New().String(), session)
 }
 
 type aiSession struct {

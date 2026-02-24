@@ -3,7 +3,7 @@
     "tasks": [
         {
             "type": "shell",
-            "command": "go",
+            "command": "make",
             "args": [
                 "build"
             ],
@@ -21,15 +21,17 @@
                         "--login",
                         "-c"
                     ]
+                },
+                "env": {
+                    "BUILD_FLAGS": "-C ${workspaceFolder} -v"
                 }
             }
         },
         {
             "type": "shell",
-            "command": "go",
+            "command": "make",
             "args": [
-                "run",
-                "${workspaceFolder}"
+                "run"
             ],
             "group": "build",
             "label": "Run",
@@ -45,6 +47,9 @@
                         "--login",
                         "-c"
                     ]
+                },
+                "env": {
+                    "RUN_FLAGS": "-C ${workspaceFolder} -v"
                 }
             },
             "dependsOn": "Build",
@@ -71,7 +76,7 @@
                 "-q",
                 "--",
                 "bash",
-                "${workspaceFolder}/.devcontainer/scripts/go_staticcheck.sh",
+                "${workspaceFolder}/.vscode/scripts/go_staticcheck.sh",
                 "${workspaceFolder}"
             ],
             "isBackground": true,
@@ -114,7 +119,7 @@
                 "-q",
                 "--",
                 "bash",
-                "${workspaceFolder}/.devcontainer/scripts/go_fmt.sh",
+                "${workspaceFolder}/.vscode/scripts/go_fmt.sh",
                 "${workspaceFolder}"
             ],
             "isBackground": true,
@@ -148,7 +153,7 @@
                 "-q",
                 "--",
                 "bash",
-                "${workspaceFolder}/.devcontainer/scripts/go_build.sh",
+                "${workspaceFolder}/.vscode/scripts/go_build.sh",
                 "${workspaceFolder}"
             ],
             "isBackground": true,

@@ -175,9 +175,12 @@ func appMain(sessionID string, aiPorts ai.Ports) error {
 	return nil
 }
 
-func Run(sessionID string, aiPorts ai.Ports) {
+func Run(buildVersion string, sessionID string, aiPorts ai.Ports) {
 	log.InitLogger(sessionID)
 	defer log.CloseLogger()
+
+	fmt.Printf("Log file initialized at %s\n", log.GetLogPath())
+	log.Info(fmt.Sprintf("Starting application: sessionID=%v, buildVersion=%v", sessionID, buildVersion))
 
 	if err := appMain(sessionID, aiPorts); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

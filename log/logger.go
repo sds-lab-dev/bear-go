@@ -39,8 +39,9 @@ func (l LogLevel) String() string {
 var globalLogger *logger
 
 type logger struct {
-	mu   sync.Mutex
-	file *os.File
+	mu      sync.Mutex
+	file    *os.File
+	logPath string
 }
 
 func InitLogger(sessionID string) error {
@@ -51,7 +52,7 @@ func InitLogger(sessionID string) error {
 		return fmt.Errorf("failed to open log file %s: %w", logPath, err)
 	}
 
-	globalLogger = &logger{file: file}
+	globalLogger = &logger{file: file, logPath: logPath}
 	return nil
 }
 
@@ -79,6 +80,13 @@ func (l *logger) writeLog(callerSkip int, level LogLevel, msg string) {
 	defer l.mu.Unlock()
 
 	_, _ = l.file.WriteString(entry)
+}
+
+func GetLogPath() string {
+	if globalLogger == nil {
+		return ""
+	}
+	return globalLogger.logPath
 }
 
 func Debug(msg string) {
