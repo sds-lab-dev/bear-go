@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/kaptinlin/jsonschema v0.7.2
 	github.com/muesli/reflow v0.3.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

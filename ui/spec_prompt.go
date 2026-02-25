@@ -188,9 +188,15 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var content string
 		switch msg.Type {
 		case ai.StreamMessageTypeThinking:
-			content = renderAgentThinking(msg.Content)
+			content = renderStreamMessageThinking(msg.Content)
+		case ai.StreamMessageTypeToolCall:
+			content = renderStreamMessageToolCall(msg.Content)
+		case ai.StreamMessageTypeToolCallResult:
+			content = renderStreamMessageToolCallResult(msg.Content)
+		case ai.StreamMessageTypeText:
+			// Fallthrough to default case.
 		default:
-			content = msg.Content
+			content = renderStreamMessageText(msg.Content)
 		}
 		cmd := tea.Sequence(
 			tea.Printf("%v\n", content),

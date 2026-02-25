@@ -40,10 +40,50 @@ func renderAgentInactivePrompt(msg string, prefixDot bool) string {
 	return result
 }
 
-func renderAgentThinking(msg string) string {
+func renderStreamMessageThinking(msg string) string {
+	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	headerStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#000000")).Italic(true)
 	bodyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#8D8D8D"))
 
-	return headerStyle.Render("Thinking...\n") + bodyStyle.Render(msg)
+	return prefixStyle.Render("● ") +
+		headerStyle.Render("Thinking:") +
+		"\n" +
+		bodyStyle.Render(msg)
+}
+
+func renderStreamMessageToolCall(msg string) string {
+	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#000000")).Italic(true)
+	bodyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#8D8D8D"))
+
+	return prefixStyle.Render("● ") +
+		headerStyle.Render("Tool Call:") +
+		"\n" +
+		bodyStyle.Render(msg)
+}
+
+func renderStreamMessageToolCallResult(msg string) string {
+	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#000000")).Italic(true)
+	bodyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#8D8D8D"))
+
+	return prefixStyle.Render("● ") +
+		headerStyle.Render("Tool Call Result:") +
+		"\n" +
+		bodyStyle.Render(msg)
+}
+
+func renderStreamMessageText(msg string) string {
+	prefixStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	headerStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#000000")).Italic(true)
+	bodyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#8D8D8D"))
+
+	return prefixStyle.Render("● ") +
+		headerStyle.Render("Text:") +
+		"\n" +
+		bodyStyle.Render(msg)
 }

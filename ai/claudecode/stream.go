@@ -2,11 +2,15 @@ package claudecode
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/sds-lab-dev/bear-go/ai"
 	"github.com/sds-lab-dev/bear-go/log"
@@ -119,6 +123,53 @@ func (content ContentBlock) StreamMessageType() ai.StreamMessageType {
 	}
 }
 
+func convertJSONToYAML(raw []byte) (string, error) {
+	if len(raw) == 0 {
+		return "", nil
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber() // preserves large integers/precise numbers when possible
+
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return "", err
+	}
+
+	out, err := yaml.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
+}
+
+// PrettyPrintQuotedEscaped takes a string that includes the surrounding quotes
+// (") and contains escape sequences like \n, \t, \".
+//
+// It returns a decoded string where \n becomes an actual newline, \t becomes a
+// tab, and indentation is preserved.
+//
+// If any error occurs during processing, it returns the original input unchanged.
+func PrettyPrintQuotedEscapedBytes(b []byte) (string, error) {
+	original := string(b)
+
+	s := strings.TrimSpace(original)
+
+	decoded, err := strconv.Unquote(s)
+	if err != nil {
+		return "", err
+	}
+
+	var sb strings.Builder
+	_, err = sb.WriteString(decoded)
+	if err != nil {
+		return "", err
+	}
+
+	return sb.String(), nil
+}
+
 func (content ContentBlock) StreamMessageContent() string {
 	switch content.Type {
 	case "text":
@@ -128,21 +179,41 @@ func (content ContentBlock) StreamMessageContent() string {
 		}
 		return content.Text
 	case "tool_use":
-		if content.Name == "" {
+		name := content.Name
+		if name == "" {
 			log.Warning("tool_use content block has empty name")
-			return "tool_use with empty name"
+			name = "empty tool_use name"
 		}
-		if len(content.Input) == 0 {
+
+		input, err := convertJSONToYAML(content.Input)
+		if err != nil {
+			log.Warning(fmt.Sprintf("failed to convert tool_use input from JSON to YAML: %v", err))
+			input = string(content.Input)
+		}
+		if input == "" {
 			log.Warning("tool_use content block has empty input")
-			return "tool_use with empty input"
+			input = "empty tool_use input"
 		}
-		return fmt.Sprintf("%v: %v", content.Name, string(content.Input))
+
+		return fmt.Sprintf("%v: %v", name, input)
 	case "tool_result":
-		if len(content.Content) == 0 {
+		// We first try to convert the content from JSON to YAML for better
+		// readability, and if that fails, we pretty print the original content
+		// as a quoted and escaped string. If that also fails, use the original
+		// content as a fallback string.
+		result, err := convertJSONToYAML(content.Content)
+		if err != nil {
+			result, err = PrettyPrintQuotedEscapedBytes(content.Content)
+			if err != nil {
+				log.Warning(fmt.Sprintf("failed to process tool_result content: %v", err))
+				result = string(content.Content)
+			}
+		}
+		if len(result) == 0 {
 			log.Warning("tool_result content block has empty content")
 			return "empty tool_result content"
 		}
-		return string(content.Content)
+		return result
 	case "thinking":
 		if content.Thinking == "" {
 			log.Warning("thinking content block has empty thinking text")
