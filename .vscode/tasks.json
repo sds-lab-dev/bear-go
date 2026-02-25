@@ -138,7 +138,6 @@
             },
             "presentation": {
                 "reveal": "never",
-                "revealProblems": "onProblem",
                 "focus": false,
                 "panel": "dedicated",
                 "showReuseMessage": false
