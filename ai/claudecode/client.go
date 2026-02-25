@@ -20,9 +20,7 @@ var (
 	ErrProcessExitError   = errors.New("claude process exited with error")
 )
 
-const toolList = "AskUserQuestion,Bash,TaskOutput,Edit,ExitPlanMode,Glob,Grep," +
-	"KillShell,MCPSearch,Read,Skill,Task,TaskCreate,TaskGet,TaskList,TaskUpdate," +
-	"WebFetch,WebSearch,Write,LSP"
+const toolList = "AskUserQuestion,Bash,TaskOutput,Edit,ExitPlanMode,Glob,Grep,KillShell,MCPSearch,Read,Skill,Task,TaskCreate,TaskGet,TaskList,TaskUpdate,WebFetch,WebSearch,Write,LSP"
 
 type Client struct {
 	apiKey         string
@@ -76,7 +74,9 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-func (c *Client) GetInitialClarifyingQuestions(initialUserRequest string) ([]string, error) {
+func (c *Client) GetInitialClarifyingQuestions(
+	initialUserRequest string,
+) ([]string, error) {
 	if c.sessionState != sessionStateBegin {
 		return nil, fmt.Errorf("unexpected session state for GetInitialClarifyingQuestions: %v", c.sessionState)
 	}
@@ -85,7 +85,11 @@ func (c *Client) GetInitialClarifyingQuestions(initialUserRequest string) ([]str
 	type outputSchema struct {
 		Questions []string `json:"questions" jsonschema:"required,minItems=0,maxItems=5"`
 	}
-	output, err := query[outputSchema](c, ai.ClarificationSystemPrompt(), ai.ClarificationUserPromptForInitialRequest(initialUserRequest))
+	output, err := query[outputSchema](
+		c,
+		ai.ClarificationSystemPrompt(),
+		ai.ClarificationUserPromptForInitialRequest(initialUserRequest),
+	)
 	if err != nil {
 		err = fmt.Errorf("failed to get initial clarifying questions: %w", err)
 		log.Error(err.Error())
@@ -210,18 +214,21 @@ func query[T any](client *Client, systemPrompt, userPrompt string) (T, error) {
 	waitErr := cmd.Wait()
 	log.Debug(fmt.Sprintf("finished Claude Code CLI process: waitErr=%v", waitErr))
 	if waitErr != nil {
-		return zeroValue, fmt.Errorf("%w: %s", ErrProcessExitError, stderrBuf.String())
+		return zeroValue,
+			fmt.Errorf("%w: %s", ErrProcessExitError, stderrBuf.String())
 	}
 	log.Debug(fmt.Sprintf("raw result from processStream: %v", string(result)))
 
 	if validator := schema.Validate(result); !validator.IsValid() {
 		err := validator.DetailedErrors()
-		return zeroValue, fmt.Errorf("JSON schema validation failed for type %T: %v", zeroValue, err)
+		return zeroValue,
+			fmt.Errorf("JSON schema validation failed for type %T: %v", zeroValue, err)
 	}
 
 	var finalResult T
 	if err := json.Unmarshal(result, &finalResult); err != nil {
-		return zeroValue, fmt.Errorf("failed to unmarshal processStream result into type %T: %w", zeroValue, err)
+		return zeroValue,
+			fmt.Errorf("failed to unmarshal processStream result into type %T: %w", zeroValue, err)
 	}
 
 	return finalResult, nil
@@ -255,10 +262,11 @@ func buildCommand(c *Client, systemPromptPath, jsonSchema string) *exec.Cmd {
 		"CLAUDE_CODE_DISABLE_AUTO_MEMORY=0",
 		"CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1",
 	)
-	// If an API key is provided, use the key to authenticate with the Anthropic API.
-	// If no API key is provided, the claude binary will attempt to use a subscription plan if
-	// available, but this may fail if the key is required for authentication, in which case an
-	// error will be returned.
+	// If an API key is provided, use the key to authenticate with the Anthropic
+	// API.
+	// If no API key is provided, the claude binary will attempt to use a
+	// subscription plan if available, but this may fail if the key is required
+	// for authentication, in which case an error will be returned.
 	if c.apiKey != "" {
 		cmd.Env = append(cmd.Env, "ANTHROPIC_API_KEY="+c.apiKey)
 	}

@@ -50,7 +50,8 @@ ensure_persist_link() {
   fi
 
   # If target exists as a real path:
-  # - If persist dst doesn't exist yet, move target into persist (first-run migration).
+  # - If persist dst doesn't exist yet, move target into persist (first-run 
+  #   migration).
   # - Else, keep persist as source of truth and back up the target.
   if [[ -e "$target" ]]; then
     if [[ ! -e "$dst" ]]; then

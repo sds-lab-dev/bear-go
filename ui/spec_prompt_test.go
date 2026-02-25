@@ -12,11 +12,15 @@ import (
 
 type mockSpecWriter struct{}
 
-func (m *mockSpecWriter) GetInitialClarifyingQuestions(_ string) ([]string, error) {
+func (m *mockSpecWriter) GetInitialClarifyingQuestions(
+	_ string,
+) ([]string, error) {
 	return nil, nil
 }
 
-func (m *mockSpecWriter) GetNextClarifyingQuestions(userAnswer string) ([]string, error) {
+func (m *mockSpecWriter) GetNextClarifyingQuestions(
+	userAnswer string,
+) ([]string, error) {
 	return nil, nil
 }
 

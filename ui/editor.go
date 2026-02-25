@@ -14,9 +14,15 @@ var ErrNoEditorFound = errors.New(
 	"no editor found. please set the EDITOR environment variable or install 'code' or 'vi'",
 )
 
-// resolveEditor는 사용할 외부 에디터를 결정한다.
-// lookupEnv는 환경변수 조회 함수, commandExists는 명령 존재 확인 함수로,
-// 테스트 시 주입하여 모킹할 수 있다.
+// resolveEditor determines which external editor to use based on the following
+// precedence:
+//
+//  1. If the EDITOR environment variable is set and not empty, use that.
+//  2. If the 'code' command (VS Code) is available on the system, use that with
+//     the '--wait' flag.
+//  3. If the 'vi' command is available on the system, use that.
+//  4. If none of the above are available, return an error indicating that no
+//     editor was found.
 func resolveEditor(
 	lookupEnv func(string) (string, bool),
 	commandExists func(string) bool,

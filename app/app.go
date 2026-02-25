@@ -103,12 +103,13 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case stateSwitchMsg:
-		// This internal message is used to switch between sub-models to ensure that the
-		// mainModel clears the terminal and re-renders the new sub-model cleanly when
-		// transitioning between states.
+		// This internal message is used to switch between sub-models to ensure
+		// that the mainModel clears the terminal and re-renders the new sub-model
+		// cleanly when transitioning between states.
 		//
-		// Sub-models DO NOT need to worry about clearing the terminal when they finish, they
-		// can just send a message to the mainModel to inform the final result of the sub-model.
+		// Sub-models DO NOT need to worry about clearing the terminal when they
+		// finish, they can just send a message to the mainModel to inform the
+		// final result of the sub-model.
 		m.state = msg.newState
 		m.currentModel = msg.newModel
 		return m, m.currentModel.Init()
@@ -133,10 +134,10 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// For all other messages, delegate them to the current sub-model.
 	//
 	// IMPORTANT:
-	// You MUST NOT return the sub-model directly here, as that would lose the mainModel
-	// and break the main loop. Instead, you MUST update the currentModel field of the
-	// mainModel with the updated sub-model returned from the Update call, and then return
-	// the mainModel itself.
+	// You MUST NOT return the sub-model directly here, as that would lose the
+	// mainModel and break the main loop. Instead, you MUST update the
+	// currentModel field of the mainModel with the updated sub-model returned
+	// from the Update call, and then return the mainModel itself.
 	log.Debug(fmt.Sprintf("delegating message to current sub-model of type %T: %#v", m.currentModel, msg))
 	updatedModel, cmd := m.currentModel.Update(msg)
 	m.currentModel = updatedModel
@@ -147,8 +148,8 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m mainModel) View() string {
 	log.Debug(fmt.Sprintf("main model rendering view in state %v with current sub-model of type %T", m.state, m.currentModel))
 
-	// m.currentModel is allowed to be nil here that means we don't have a sub-model to render
-	// anymore (e.g., we've finished all the steps).
+	// m.currentModel is allowed to be nil here that means we don't have a
+	// sub-model to render anymore (e.g., we've finished all the steps).
 	if m.currentModel == nil {
 		return ""
 	}

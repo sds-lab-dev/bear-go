@@ -14,7 +14,11 @@ func TestInitLogger_CreatesLogFile(t *testing.T) {
 	sessionID := "test-session-create"
 	logPath := filepath.Join(logDir, fmt.Sprintf("bear-%s.log", sessionID))
 
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(
+		logPath,
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND,
+		0644,
+	)
 	if err != nil {
 		t.Fatalf("failed to create log file: %v", err)
 	}

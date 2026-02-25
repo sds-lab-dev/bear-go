@@ -16,5 +16,9 @@ func ClarificationSystemPrompt() string {
 }
 
 func ClarificationUserPromptForInitialRequest(initialUserRequest string) string {
-	return strings.ReplaceAll(RawClarificationUserPromptForInitialRequest, "{{INITIAL_USER_REQUEST_TEXT}}", initialUserRequest)
+	return strings.ReplaceAll(
+		RawClarificationUserPromptForInitialRequest,
+		"{{INITIAL_USER_REQUEST_TEXT}}",
+		initialUserRequest,
+	)
 }

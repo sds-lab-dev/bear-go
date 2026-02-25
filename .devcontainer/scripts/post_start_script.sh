@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #
-# 이 스크립트는 postStartCommand 액션이 발생할 때 실행된다. postStartCommand 액션은 컨테이너가 실행될 때마다
-# 매번 발생한다.
+# 이 스크립트는 postStartCommand 액션이 발생할 때 실행된다. postStartCommand 액션은 컨테이너가
+# 실행될 때마다 매번 발생한다.
 #
 # 따라서 이 스크립트에서는 컨테이너가 매번 실행될 때마다 미리 실행주어야 하는 작업들을 실행하면 된다.
 #

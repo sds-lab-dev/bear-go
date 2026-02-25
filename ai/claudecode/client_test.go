@@ -76,7 +76,9 @@ func TestQuery_SessionIDReusedOnSubsequentCall(t *testing.T) {
 
 	hasResume := false
 	for i, arg := range cmd2.Args {
-		if arg == "--resume" && i+1 < len(cmd2.Args) && cmd2.Args[i+1] == firstSessionID {
+		if arg == "--resume" &&
+			i+1 < len(cmd2.Args) &&
+			cmd2.Args[i+1] == firstSessionID {
 			hasResume = true
 			break
 		}

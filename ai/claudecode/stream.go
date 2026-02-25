@@ -79,7 +79,8 @@ func (msg Message) toAiStreamMessage() ai.StreamMessage {
 		}
 	}
 
-	// For simplicity, we only convert the first content block to an ai.StreamMessage.
+	// For simplicity, we only convert the first content block to an
+	// ai.StreamMessage.
 	return ai.StreamMessage{
 		Type:    msg.Content[0].StreamMessageType(),
 		Content: msg.Content[0].StreamMessageContent(),
@@ -95,8 +96,8 @@ type ContentBlock struct {
 	Name string `json:"name"`
 	// Used when Type is "tool_use".
 	Input json.RawMessage `json:"input"`
-	// Used when Type is "tool_result". This field can be both string and array of JSON
-	// objects, so we use json.RawMessage.
+	// Used when Type is "tool_result". This field can be both string and array
+	// of JSON objects, so we use json.RawMessage.
 	Content json.RawMessage `json:"content"`
 	// Used when Type is "thinking".
 	Thinking string `json:"thinking"`
@@ -165,7 +166,10 @@ var (
 	ErrNoResultReceived  = errors.New("stream ended without a result message")
 )
 
-func processStream(reader io.Reader, streamCallback func(ai.StreamMessage)) (json.RawMessage, error) {
+func processStream(
+	reader io.Reader,
+	streamCallback func(ai.StreamMessage),
+) (json.RawMessage, error) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -195,8 +199,9 @@ func processStream(reader io.Reader, streamCallback func(ai.StreamMessage)) (jso
 			}
 			streamCallback(msg.toAiStreamMessage())
 		case StreamEventTypeResult:
-			// IsError can be true even if Subtype is "success", so we check the Subtype and
-			// StructuredOutput to determine if this is a successful result.
+			// IsError can be true even if Subtype is "success", so we check the
+			// Subtype and StructuredOutput to determine if this is a successful
+			// result.
 			if msg.Subtype == "success" && len(msg.StructuredOutput) > 0 {
 				return msg.StructuredOutput, nil
 			}
