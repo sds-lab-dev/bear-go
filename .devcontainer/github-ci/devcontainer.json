@@ -1,8 +1,8 @@
 {
     "name": "Bear AI developer in Go for GitHub CI actions",
     "build": {
-        "dockerfile": "Dockerfile",
-        "context": "..",
+        "dockerfile": "../Dockerfile",
+        "context": "../..",
         "target": "toolchain",
         "options": [
             "--pull"
