@@ -3,6 +3,7 @@
     "build": {
         "dockerfile": "Dockerfile",
         "context": "..",
+        "target": "dev",
         "options": [
             "--pull"
         ]
@@ -11,10 +12,8 @@
         "vscode": {
             "settings": {
                 "debug.allowBreakpointsEverywhere": true,
-                "[go]": {
-                    "editor.codeActionsOnSave": {
-                        "source.organizeImports": "always"
-                    }
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": "always"
                 }
             },
             "extensions": [
