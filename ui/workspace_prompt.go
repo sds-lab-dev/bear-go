@@ -105,7 +105,7 @@ func (m WorkspacePromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	// We're done here.
 	m.errorMessage = ""
 	var b strings.Builder
-	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)), true))
+	b.WriteString(renderAgentInactivePrompt(successStyle.Render(fmt.Sprintf("Workspace set to: %s", m.confirmedPath)), true))
 	log.Info(fmt.Sprintf("Workspace confirmed: %s", m.confirmedPath))
 	cmd := tea.Sequence(
 		tea.Printf("%v\n", b.String()),
@@ -132,7 +132,7 @@ func (m WorkspacePromptModel) View() string {
 	b.WriteString(m.textarea.View())
 	if m.errorMessage != "" {
 		b.WriteByte('\n')
-		b.WriteString(ErrorStyle.Render(m.errorMessage))
+		b.WriteString(errorStyle.Render(m.errorMessage))
 	}
 	b.WriteByte('\n')
 

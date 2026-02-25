@@ -108,7 +108,7 @@ func TestResolveEditor_NoEditorAvailable(t *testing.T) {
 	commandExists := func(string) bool { return false }
 
 	_, err := resolveEditor(lookupEnv, commandExists)
-	if !errors.Is(err, ErrNoEditorFound) {
+	if !errors.Is(err, errNoEditorFound) {
 		t.Errorf("expected ErrNoEditorFound, got %v", err)
 	}
 }

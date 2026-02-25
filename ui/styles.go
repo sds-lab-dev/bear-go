@@ -3,16 +3,13 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	BearArtStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	SloganStyle  = lipgloss.NewStyle().
+	bearArtStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	sloganStyle  = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("6")).Bold(true)
-	DescriptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	SeparatorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	ErrorStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
-	SuccessStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	QuestionStyle    = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("5")).Bold(true)
-	InfoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	descriptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	separatorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	errorStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
+	successStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 )
 
 func renderAgentActivePrompt(msg string, prefixDot bool) string {

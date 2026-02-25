@@ -77,7 +77,7 @@ func RenderBanner(terminalWidth int) string {
 
 	for i, artLine := range bearArtLines {
 		padded := fmt.Sprintf("%-*s", bearArtWidth+bearArtGap, artLine)
-		builder.WriteString(BearArtStyle.Render(padded))
+		builder.WriteString(bearArtStyle.Render(padded))
 
 		rightIdx := i - rightColumnStartOffset
 		if rightIdx >= 0 && rightIdx < len(rightColLines) {
@@ -90,7 +90,7 @@ func RenderBanner(terminalWidth int) string {
 	}
 
 	separator := strings.Repeat("─", terminalWidth)
-	builder.WriteString(SeparatorStyle.Render(separator))
+	builder.WriteString(separatorStyle.Render(separator))
 	builder.WriteByte('\n')
 
 	return builder.String()
@@ -99,9 +99,9 @@ func RenderBanner(terminalWidth int) string {
 func applyRightColumnStyle(entry rightColumnLine) string {
 	switch entry.style {
 	case styleSlogan:
-		return SloganStyle.Render(entry.text)
+		return sloganStyle.Render(entry.text)
 	case styleDescription:
-		return DescriptionStyle.Render(entry.text)
+		return descriptionStyle.Render(entry.text)
 	default:
 		return entry.text
 	}

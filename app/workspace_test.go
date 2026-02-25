@@ -10,21 +10,21 @@ import (
 func TestValidateWorkspacePath_AbsoluteDirectoryPath(t *testing.T) {
 	dir := t.TempDir()
 
-	err := ValidateWorkspacePath(dir)
+	err := validateWorkspacePath(dir)
 	if err != nil {
 		t.Fatalf("expected nil error for valid absolute directory, got: %v", err)
 	}
 }
 
 func TestValidateWorkspacePath_RelativePath(t *testing.T) {
-	err := ValidateWorkspacePath("./some/path")
+	err := validateWorkspacePath("./some/path")
 	if !errors.Is(err, ErrRelativePath) {
 		t.Fatalf("expected ErrRelativePath, got: %v", err)
 	}
 }
 
 func TestValidateWorkspacePath_NonExistentPath(t *testing.T) {
-	err := ValidateWorkspacePath("/nonexistent/path/abc123")
+	err := validateWorkspacePath("/nonexistent/path/abc123")
 	if !errors.Is(err, ErrPathNotExist) {
 		t.Fatalf("expected ErrPathNotExist, got: %v", err)
 	}
@@ -40,14 +40,14 @@ func TestValidateWorkspacePath_FilePath(t *testing.T) {
 	}
 	f.Close()
 
-	err = ValidateWorkspacePath(filePath)
+	err = validateWorkspacePath(filePath)
 	if !errors.Is(err, ErrNotDirectory) {
 		t.Fatalf("expected ErrNotDirectory, got: %v", err)
 	}
 }
 
 func TestValidateWorkspacePath_EmptyPath(t *testing.T) {
-	err := ValidateWorkspacePath("")
+	err := validateWorkspacePath("")
 	if !errors.Is(err, ErrRelativePath) {
 		t.Fatalf("expected ErrRelativePath for empty path, got: %v", err)
 	}

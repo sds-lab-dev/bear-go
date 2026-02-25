@@ -24,7 +24,7 @@ type startEditorMsg struct{}
 type UserRequestPromptModel struct {
 	textarea        textarea.Model
 	errorMessage    string
-	resolveEditor   func() (EditorCommand, error)
+	resolveEditor   func() (editorCommand, error)
 	tempFilePath    string
 	launchingEditor bool
 }
@@ -43,7 +43,7 @@ func NewUserRequestPromptModel() UserRequestPromptModel {
 
 	return UserRequestPromptModel{
 		textarea: ta,
-		resolveEditor: func() (EditorCommand, error) {
+		resolveEditor: func() (editorCommand, error) {
 			return resolveEditor(os.LookupEnv, commandExistsOnSystem)
 		},
 	}
@@ -116,7 +116,7 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 	m.errorMessage = ""
 	var b strings.Builder
 
-	b.WriteString(renderAgentInactivePrompt(SuccessStyle.Render("You requested as follows:"), true))
+	b.WriteString(renderAgentInactivePrompt(successStyle.Render("You requested as follows:"), true))
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.Value())
 
@@ -223,7 +223,7 @@ func (m UserRequestPromptModel) View() string {
 	b.WriteString(m.textarea.View())
 	if m.errorMessage != "" {
 		b.WriteByte('\n')
-		b.WriteString(ErrorStyle.Render(m.errorMessage))
+		b.WriteString(errorStyle.Render(m.errorMessage))
 	}
 	b.WriteByte('\n')
 

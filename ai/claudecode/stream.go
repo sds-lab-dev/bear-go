@@ -12,17 +12,17 @@ import (
 	"github.com/sds-lab-dev/bear-go/log"
 )
 
-type StreamEventType string
+type streamEventType string
 
 const (
-	StreamEventTypeAssistant StreamEventType = "assistant"
-	StreamEventTypeUser      StreamEventType = "user"
-	StreamEventTypeResult    StreamEventType = "result"
+	streamEventTypeAssistant streamEventType = "assistant"
+	streamEventTypeUser      streamEventType = "user"
+	streamEventTypeResult    streamEventType = "result"
 )
 
 type StreamMessage struct {
 	// Type can be "assistant", "user", or "result".
-	Type StreamEventType `json:"type"`
+	Type streamEventType `json:"type"`
 	// Used when Type is "result".
 	Subtype string `json:"subtype"`
 	// Used when Type is "result".
@@ -40,7 +40,7 @@ type StreamMessage struct {
 }
 
 func (msg StreamMessage) toAiStreamMessage() ai.StreamMessage {
-	if msg.Type != StreamEventTypeAssistant && msg.Type != StreamEventTypeUser {
+	if msg.Type != streamEventTypeAssistant && msg.Type != streamEventTypeUser {
 		panic(fmt.Sprintf("unexpected StreamMessage type for toAiStreamMessage: %v", msg.Type))
 	}
 	return msg.Message.toAiStreamMessage()
@@ -56,7 +56,7 @@ type Message struct {
 }
 
 func (msg Message) toAiStreamMessage() ai.StreamMessage {
-	if msg.Role != string(StreamEventTypeUser) && msg.Role != string(StreamEventTypeAssistant) {
+	if msg.Role != string(streamEventTypeUser) && msg.Role != string(streamEventTypeAssistant) {
 		log.Warning(fmt.Sprintf("unexpected stream message role: %v", msg.Role))
 		// Fallback
 		jsonBytes, err := json.Marshal(msg)
@@ -193,12 +193,12 @@ func processStream(
 		}
 
 		switch msg.Type {
-		case StreamEventTypeAssistant, StreamEventTypeUser:
+		case streamEventTypeAssistant, streamEventTypeUser:
 			if streamCallback == nil {
 				continue
 			}
 			streamCallback(msg.toAiStreamMessage())
-		case StreamEventTypeResult:
+		case streamEventTypeResult:
 			// IsError can be true even if Subtype is "success", so we check the
 			// Subtype and StructuredOutput to determine if this is a successful
 			// result.

@@ -52,7 +52,7 @@ func newMainModel(sessionID string, aiPorts ai.Ports) (mainModel, error) {
 		state:     mainStateWorkspaceDir,
 		currentModel: ui.NewWorkspacePromptModel(
 			cwd,
-			ValidateWorkspacePath,
+			validateWorkspacePath,
 		),
 		mainHeaderCmd: mainHeaderCmd,
 		aiPorts:       aiPorts,

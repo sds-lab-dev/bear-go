@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-type EditorCommand struct {
+type editorCommand struct {
 	Executable string
 	Args       []string
 }
 
-var ErrNoEditorFound = errors.New(
+var errNoEditorFound = errors.New(
 	"no editor found. please set the EDITOR environment variable or install 'code' or 'vi'",
 )
 
@@ -26,28 +26,28 @@ var ErrNoEditorFound = errors.New(
 func resolveEditor(
 	lookupEnv func(string) (string, bool),
 	commandExists func(string) bool,
-) (EditorCommand, error) {
+) (editorCommand, error) {
 	editorEnv, ok := lookupEnv("EDITOR")
 	if ok && editorEnv != "" {
 		tokens := strings.Fields(editorEnv)
-		return EditorCommand{
+		return editorCommand{
 			Executable: tokens[0],
 			Args:       tokens[1:],
 		}, nil
 	}
 
 	if commandExists("code") {
-		return EditorCommand{
+		return editorCommand{
 			Executable: "code",
 			Args:       []string{"--wait"},
 		}, nil
 	}
 
 	if commandExists("vi") {
-		return EditorCommand{
+		return editorCommand{
 			Executable: "vi",
 		}, nil
 	}
 
-	return EditorCommand{}, ErrNoEditorFound
+	return editorCommand{}, errNoEditorFound
 }

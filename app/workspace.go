@@ -13,7 +13,7 @@ var (
 	ErrNotDirectory = errors.New("path is not a directory; please enter a directory path")
 )
 
-func ValidateWorkspacePath(path string) error {
+func validateWorkspacePath(path string) error {
 	if !filepath.IsAbs(path) {
 		return ErrRelativePath
 	}

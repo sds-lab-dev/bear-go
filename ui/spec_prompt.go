@@ -212,7 +212,7 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		questions := fmt.Sprintf("%v\n%v",
 			renderAgentInactivePrompt(
-				SuccessStyle.Render("Clarifying questions:"), true,
+				successStyle.Render("Clarifying questions:"), true,
 			), b.String(),
 		)
 		return m, tea.Println(questions)
@@ -242,7 +242,7 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Debug("received clarifying questions done message")
 		m.state = specStateSpecDrafting
 		cmd := tea.Sequence(
-			tea.Println(SuccessStyle.Render("No more clarifying questions.")),
+			tea.Println(successStyle.Render("No more clarifying questions.")),
 			func() tea.Msg {
 				go m.draftSpec()
 				return <-m.eventCh
@@ -252,11 +252,11 @@ func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case specDraftMsg:
 		log.Debug(fmt.Sprintf("received spec draft message: %v", msg.draft))
 		m.state = specStateWaitUserFeedback
-		return m, tea.Println(SuccessStyle.Render("Draft spec:\n" + msg.draft))
+		return m, tea.Println(successStyle.Render("Draft spec:\n" + msg.draft))
 	case specApprovedMsg:
 		log.Debug(fmt.Sprintf("received spec approved message: %v", msg.spec))
 		m.state = specStateSpecApproved
-		return m, tea.Println(SuccessStyle.Render("Approved spec:\n" + msg.spec))
+		return m, tea.Println(successStyle.Render("Approved spec:\n" + msg.spec))
 	case streamErrorMsg:
 		log.Debug(fmt.Sprintf("received stream error message: %v", msg.err))
 		return m, func() tea.Msg {
@@ -340,7 +340,7 @@ func (m SpecPromptModel) View() string {
 		b.WriteString(m.textarea.View())
 		if m.errorMessage != "" {
 			b.WriteByte('\n')
-			b.WriteString(ErrorStyle.Render(m.errorMessage))
+			b.WriteString(errorStyle.Render(m.errorMessage))
 		}
 		return b.String()
 	case specStateSpecDrafting:
@@ -364,7 +364,7 @@ func (m SpecPromptModel) View() string {
 		b.WriteString(m.textarea.View())
 		if m.errorMessage != "" {
 			b.WriteByte('\n')
-			b.WriteString(ErrorStyle.Render(m.errorMessage))
+			b.WriteString(errorStyle.Render(m.errorMessage))
 		}
 		return b.String()
 	case specStateSpecApproved:

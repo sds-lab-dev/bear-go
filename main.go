@@ -8,7 +8,6 @@ import (
 	"github.com/sds-lab-dev/bear-go/ai"
 	"github.com/sds-lab-dev/bear-go/ai/claudecode"
 	"github.com/sds-lab-dev/bear-go/app"
-	"github.com/sds-lab-dev/bear-go/ui"
 )
 
 const API_KEY_ENV_VAR = "ANTHROPIC_API_KEY"
@@ -40,12 +39,9 @@ func getAPIKeyFromEnvVar() string {
 		return value
 	}
 
-	fmt.Println(
-		ui.ErrorStyle.Render(
-			fmt.Sprintf(
-				"%v environment variable is not set or empty; trying to use a subscription plan, but this may fail if the key is required for authentication", API_KEY_ENV_VAR,
-			),
-		),
+	fmt.Printf(
+		"WARNING:\n%v environment variable is not set or empty; trying to use a subscription plan, but this may fail if the key is required for authentication\n\n",
+		API_KEY_ENV_VAR,
 	)
 
 	return ""
