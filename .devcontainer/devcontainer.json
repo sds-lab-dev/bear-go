@@ -1,5 +1,5 @@
 {
-    "name": "Bear AI developer in Go",
+    "name": "Bear AI developer in Go for local development",
     "build": {
         "dockerfile": "Dockerfile",
         "context": "..",

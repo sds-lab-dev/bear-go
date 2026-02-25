@@ -59,6 +59,7 @@ jobs:
       - name: Pre-build image and build apps in devcontainer
         uses: devcontainers/ci@v0.3
         with:
+          configFile: ./.devcontainer/devcontainer_github_ci.json
           imageName: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}
           cacheFrom: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}
           push: always
