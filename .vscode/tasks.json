@@ -102,40 +102,6 @@
             }
         },
         {
-            "label": "Watch: go fmt",
-            "type": "shell",
-            "command": "watchexec",
-            "args": [
-                "--workdir",
-                "${workspaceFolder}",
-                "--exts",
-                "go",
-                "--watch",
-                "${workspaceFolder}",
-                "--debounce",
-                "1s",
-                "--on-busy-update",
-                "queue",
-                "-q",
-                "--",
-                "bash",
-                "${workspaceFolder}/.vscode/scripts/go_fmt.sh",
-                "${workspaceFolder}"
-            ],
-            "isBackground": true,
-            "problemMatcher": [],
-            "runOptions": {
-                "runOn": "folderOpen",
-                "instanceLimit": 1
-            },
-            "presentation": {
-                "reveal": "never",
-                "focus": false,
-                "panel": "dedicated",
-                "showReuseMessage": false
-            }
-        },
-        {
             "label": "Watch: go build",
             "type": "shell",
             "command": "watchexec",
