@@ -24,8 +24,9 @@ RUN cat /tmp/bashrc-settings > .bashrc \
 # and other necessary tools.
 FROM toolchain AS dev
 
-ARG WORKSPACE_ROOT
-ENV WORKSPACE_ROOT=${WORKSPACE_ROOT}
+# Set the workspace root directory as an argument, which can be overridden when 
+# building the image.
+ARG WORKSPACE_ROOT=/workspace
 
 WORKDIR /var/tmp/scripts
 COPY .devcontainer/scripts .

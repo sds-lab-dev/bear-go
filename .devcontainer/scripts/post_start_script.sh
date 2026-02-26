@@ -13,7 +13,7 @@ if [[ -z "$WORKSPACE_DIR" ]]; then
   exit 1
 fi
 
-git config --global credential.helper store
+git config --global credential.helper "store --file /root/.persist/git-credentials"
 git config --global rerere.enabled true
 git config --global rerere.autoupdate true
 git config --global alias.graph "log --graph --oneline"

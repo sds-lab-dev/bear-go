@@ -14,8 +14,3 @@ if [[ -z "$WORKSPACE_DIR" ]]; then
   echo "Workspace path argument missing" >&2
   exit 1
 fi
-
-"${WORKSPACE_DIR}/.devcontainer/scripts/devcontainer-persist-links.sh" "${WORKSPACE_DIR}" || {
-  echo "Failed to setup persist links" >&2
-  exit 1
-}

@@ -9,7 +9,7 @@
         ],
         "args": {
             "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
-        }        
+        }
     },
     "customizations": {
         "vscode": {
@@ -25,13 +25,18 @@
             ]
         }
     },
-    "workspaceMount": "source=bear-go-workspace-volume,target=/workspaces/${localWorkspaceFolderBasename},type=volume",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "workspaceMount": "type=volume,source=bear-go-workspace-volume,target=${containerWorkspaceFolder}",
     "mounts": [
-        "source=bear-go-persist-volume,target=/persist,type=volume"
+        "type=volume,source=bear-go-claude-volume,target=/root/.claude",
+        "type=volume,source=bear-go-golang-volume,target=/root/go",
+        "type=volume,source=bear-go-golang-build-cache-volume,target=/root/.cache/go-build",
+        "type=volume,source=bear-go-golang-config-volume,target=/root/.config/go",
+        "type=volume,source=bear-go-persist-volume,target=/root/.persist"
     ],
     "remoteUser": "root",
     "containerEnv": {
+        "WORKSPACE_ROOT": "${containerWorkspaceFolder}",
         "TZ": "Asia/Seoul",
         "IS_SANDBOX": "1",
         "ENABLE_LSP_TOOL": "1",
