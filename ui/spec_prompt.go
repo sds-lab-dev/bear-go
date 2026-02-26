@@ -173,123 +173,185 @@ func (m SpecPromptModel) waitForNext() tea.Cmd {
 	}
 }
 
+func (m SpecPromptModel) handleWindowSizeMsg(
+	msg tea.WindowSizeMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf(
+		"received window size message: width=%d, height=%d", msg.Width, msg.Height))
+	m.textarea.SetWidth(msg.Width)
+	m.textarea.SetHeight(msg.Height / 2)
+	return m, nil
+}
+
+func (m SpecPromptModel) handleStreamEventMsg(
+	msg streamEventMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf(
+		"received stream event message: type=%v, content=%v", msg.Type, msg.Content))
+
+	var content string
+	switch msg.Type {
+	case ai.StreamMessageTypeThinking:
+		content = renderStreamMessageThinking(msg.Content)
+	case ai.StreamMessageTypeToolCall:
+		content = renderStreamMessageToolCall(msg.Content)
+	case ai.StreamMessageTypeToolCallResult:
+		content = renderStreamMessageToolCallResult(msg.Content)
+	case ai.StreamMessageTypeText:
+		// Fallthrough to default case.
+	default:
+		content = renderStreamMessageText(msg.Content)
+	}
+	cmd := tea.Sequence(
+		tea.Printf("%v\n", content),
+		m.waitForNext(),
+	)
+	return m, cmd
+}
+
+func (m SpecPromptModel) handleClarifyingQuestionsMsg(
+	msg clarifyingQuestionsMsg,
+) (tea.Model, tea.Cmd) {
+	if len(msg.questions) == 0 {
+		panic("clarifying questions array should have at least one element")
+	}
+	log.Debug(fmt.Sprintf(
+		"received clarifying questions message: %v", msg.questions))
+	m.state = specStateWaitUserAnswers
+	var b strings.Builder
+	for i, s := range msg.questions {
+		fmt.Fprintf(&b, "%v. %v\n", i+1, s)
+		if i+1 < len(msg.questions) {
+			fmt.Fprint(&b, "\n")
+		}
+	}
+	questions := fmt.Sprintf("%v\n%v",
+		renderAgentInactivePrompt(
+			successStyle.Render("Clarifying questions:"), true,
+		), b.String(),
+	)
+	return m, tea.Println(questions)
+}
+
+func (m SpecPromptModel) handleUserAnswersMsg(
+	msg userAnswersMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received user answers message: %v", msg.answers))
+	// Go to next state to prepare clarifying questions based on user's answers.
+	m.state = specStatePrepareClarifyingQuestions
+	cmd := tea.Sequence(
+		tea.Printf("Your answers:\n%v\n", msg.answers),
+		func() tea.Msg {
+			go m.getClarifyingQuestions(msg.answers)
+			return <-m.eventCh
+		},
+	)
+	return m, cmd
+}
+
+func (m SpecPromptModel) handleUserFeedbackMsg(
+	msg userFeedbackMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received user feedback message: %v", msg.feedback))
+	cmd := tea.Sequence(
+		tea.Printf("Your feedback:\n%v\n", msg.feedback),
+		func() tea.Msg {
+			go m.reviseSpec(msg.feedback)
+			return <-m.eventCh
+		},
+	)
+	return m, cmd
+}
+
+func (m SpecPromptModel) handleClarifyingQuestionsDoneMsg() (tea.Model, tea.Cmd) {
+	log.Debug("received clarifying questions done message")
+	m.state = specStateSpecDrafting
+	cmd := tea.Sequence(
+		tea.Println(successStyle.Render("No more clarifying questions.")),
+		func() tea.Msg {
+			go m.draftSpec()
+			return <-m.eventCh
+		},
+	)
+	return m, cmd
+}
+
+func (m SpecPromptModel) handleSpecDraftMsg(
+	msg specDraftMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received spec draft message: %v", msg.draft))
+	m.state = specStateWaitUserFeedback
+	return m, tea.Println(successStyle.Render("Draft spec:\n" + msg.draft))
+}
+
+func (m SpecPromptModel) handleSpecApprovedMsg(
+	msg specApprovedMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received spec approved message: %v", msg.spec))
+	m.state = specStateSpecApproved
+	return m, tea.Println(successStyle.Render("Approved spec:\n" + msg.spec))
+}
+
+func (m SpecPromptModel) handleStreamErrorMsg(
+	msg streamErrorMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received stream error message: %v", msg.err))
+	return m, func() tea.Msg {
+		return SpecPromptResult{
+			Err:          msg.err,
+			ApprovedSpec: "",
+		}
+	}
+}
+
+// TODO: external editor (Ctrl+G)
+func (m SpecPromptModel) handleKeyMsg(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
+	log.Debug(fmt.Sprintf("received key message: type=%v", msg.String()))
+
+	switch msg.String() {
+	// Go to next step on Enter
+	case "enter":
+		return m.handleEnter()
+	case "shift+enter", "alt+enter":
+		m.textarea.InsertString("\n")
+		return m, nil
+	default:
+		return m, nil
+	}
+}
+
 func (m SpecPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	log.Debug(fmt.Sprintf("received update message in SpecPromptModel: %#v", msg))
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		log.Debug(fmt.Sprintf("received window size message: width=%d, height=%d", msg.Width, msg.Height))
-		m.textarea.SetWidth(msg.Width)
-		m.textarea.SetHeight(msg.Height / 2)
-		return m, nil
+		return m.handleWindowSizeMsg(msg)
 	case streamEventMsg:
-		log.Debug(fmt.Sprintf("received stream event message: type=%v, content=%v", msg.Type, msg.Content))
-
-		var content string
-		switch msg.Type {
-		case ai.StreamMessageTypeThinking:
-			content = renderStreamMessageThinking(msg.Content)
-		case ai.StreamMessageTypeToolCall:
-			content = renderStreamMessageToolCall(msg.Content)
-		case ai.StreamMessageTypeToolCallResult:
-			content = renderStreamMessageToolCallResult(msg.Content)
-		case ai.StreamMessageTypeText:
-			// Fallthrough to default case.
-		default:
-			content = renderStreamMessageText(msg.Content)
-		}
-		cmd := tea.Sequence(
-			tea.Printf("%v\n", content),
-			m.waitForNext(),
-		)
-		return m, cmd
+		return m.handleStreamEventMsg(msg)
 	case clarifyingQuestionsMsg:
-		if len(msg.questions) == 0 {
-			panic("clarifying questions array should have at least one element")
-		}
-		log.Debug(fmt.Sprintf("received clarifying questions message: %v", msg.questions))
-		m.state = specStateWaitUserAnswers
-		var b strings.Builder
-		for i, s := range msg.questions {
-			fmt.Fprintf(&b, "%v. %v\n", i+1, s)
-			if i+1 < len(msg.questions) {
-				fmt.Fprint(&b, "\n")
-			}
-		}
-		questions := fmt.Sprintf("%v\n%v",
-			renderAgentInactivePrompt(
-				successStyle.Render("Clarifying questions:"), true,
-			), b.String(),
-		)
-		return m, tea.Println(questions)
+		return m.handleClarifyingQuestionsMsg(msg)
 	case userAnswersMsg:
-		log.Debug(fmt.Sprintf("received user answers message: %v", msg.answers))
-		// Go to next state to prepare clarifying questions based on user's answers.
-		m.state = specStatePrepareClarifyingQuestions
-		cmd := tea.Sequence(
-			tea.Printf("Your answers:\n%v\n", msg.answers),
-			func() tea.Msg {
-				go m.getClarifyingQuestions(msg.answers)
-				return <-m.eventCh
-			},
-		)
-		return m, cmd
+		return m.handleUserAnswersMsg(msg)
 	case userFeedbackMsg:
-		log.Debug(fmt.Sprintf("received user feedback message: %v", msg.feedback))
-		cmd := tea.Sequence(
-			tea.Printf("Your feedback:\n%v\n", msg.feedback),
-			func() tea.Msg {
-				go m.reviseSpec(msg.feedback)
-				return <-m.eventCh
-			},
-		)
-		return m, cmd
+		return m.handleUserFeedbackMsg(msg)
 	case clarifyingQuestionsDoneMsg:
-		log.Debug("received clarifying questions done message")
-		m.state = specStateSpecDrafting
-		cmd := tea.Sequence(
-			tea.Println(successStyle.Render("No more clarifying questions.")),
-			func() tea.Msg {
-				go m.draftSpec()
-				return <-m.eventCh
-			},
-		)
-		return m, cmd
+		return m.handleClarifyingQuestionsDoneMsg()
 	case specDraftMsg:
-		log.Debug(fmt.Sprintf("received spec draft message: %v", msg.draft))
-		m.state = specStateWaitUserFeedback
-		return m, tea.Println(successStyle.Render("Draft spec:\n" + msg.draft))
+		return m.handleSpecDraftMsg(msg)
 	case specApprovedMsg:
-		log.Debug(fmt.Sprintf("received spec approved message: %v", msg.spec))
-		m.state = specStateSpecApproved
-		return m, tea.Println(successStyle.Render("Approved spec:\n" + msg.spec))
+		return m.handleSpecApprovedMsg(msg)
 	case streamErrorMsg:
-		log.Debug(fmt.Sprintf("received stream error message: %v", msg.err))
-		return m, func() tea.Msg {
-			return SpecPromptResult{
-				Err:          msg.err,
-				ApprovedSpec: "",
-			}
-		}
+		return m.handleStreamErrorMsg(msg)
 	case tea.KeyMsg:
-		log.Debug(fmt.Sprintf("received key message: type=%v", msg.String()))
-
-		switch msg.String() {
-		// Go to next step on Enter
-		case "enter":
-			return m.handleEnter()
-		case "shift+enter", "alt+enter":
-			m.textarea.InsertString("\n")
-			return m, nil
-		}
-		// TODO: external editor (Ctrl+G)
+		return m.handleKeyMsg(msg)
 	}
 
+	// For all other messages, we pass them to the child components.
 	m.errorMessage = ""
 	var cmd tea.Cmd
 	var sequence []tea.Cmd
-	// For all other messages, we pass them to the child components to handle
-	// them in the text area.
 	m.textarea, cmd = m.textarea.Update(msg)
 	sequence = append(sequence, cmd)
 	m.spinner, cmd = m.spinner.Update(msg)

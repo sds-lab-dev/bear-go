@@ -87,8 +87,16 @@ func (msg Message) toAiStreamMessage() ai.StreamMessage {
 	// ai.StreamMessage.
 	return ai.StreamMessage{
 		Type:    msg.Content[0].StreamMessageType(),
-		Content: msg.Content[0].StreamMessageContent(),
+		Content: normalizeNewlines(msg.Content[0].StreamMessageContent()),
 	}
+}
+
+func normalizeNewlines(s string) string {
+    // 1) Windows CRLF -> LF
+    s = strings.ReplaceAll(s, "\r\n", "\n")
+    // 2) CR -> LF
+    s = strings.ReplaceAll(s, "\r", "\n")
+    return s
 }
 
 type ContentBlock struct {
@@ -203,6 +211,8 @@ func (content ContentBlock) StreamMessageContent() string {
 		// content as a fallback string.
 		result, err := convertJSONToYAML(content.Content)
 		if err != nil {
+			log.Debug("failed to process tool_result content: failed to convert to YAML from JSON")
+			log.Debug("trying to pretty print tool_result content as quoted and escaped string...")
 			result, err = PrettyPrintQuotedEscapedBytes(content.Content)
 			if err != nil {
 				log.Warning(fmt.Sprintf("failed to process tool_result content: %v", err))
@@ -258,7 +268,7 @@ func processStream(
 
 		if len(msg.Error) > 0 {
 			if msg.Error == "authentication_failed" {
-				return nil, errors.New("claude code CLI error: authentication failed: run `/login` first")
+				return nil, errors.New("claude code CLI error: authentication failed: run `/login` first in the CLI or set ANTHROPIC_API_KEY environment variable")
 			}
 			return nil, fmt.Errorf("claude code CLI error: %v", msg.Error)
 		}
