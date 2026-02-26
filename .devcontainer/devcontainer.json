@@ -22,7 +22,7 @@
             ]
         }
     },
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
+    "workspaceMount": "source=bear-go-workspace-volume,target=/workspace,type=volume",
     "workspaceFolder": "/workspace",
     "mounts": [
         "source=bear-go-persist-volume,target=/persist,type=volume"
@@ -36,7 +36,7 @@
         "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
         "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"
     },
-    "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${localWorkspaceFolder}\"",
+    "initializeCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
     "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
     "postStartCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_start_script.sh \"${containerWorkspaceFolder}\""
 }

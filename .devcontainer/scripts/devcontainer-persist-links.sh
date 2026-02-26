@@ -7,6 +7,9 @@ PERSIST="${PERSIST:-/persist}"
 DIR_TARGETS=(
   "/root/.claude"
   "/root/.local"
+  "/root/go"
+  "/root/.cache/go-build"
+  "/root/.config/go"
 )
 
 FILE_TARGETS=(
