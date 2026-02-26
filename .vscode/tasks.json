@@ -5,6 +5,32 @@
             "type": "shell",
             "command": "make",
             "args": [
+                "test"
+            ],
+            "group": "build",
+            "label": "Test",
+            "presentation": {
+                "panel": "shared",
+                "clear": false,
+                "close": false
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                },
+                "env": {
+                    "TEST_FLAGS": "-C ${workspaceFolder} -v -count=1"
+                }
+            }
+        },
+        {
+            "type": "shell",
+            "command": "make",
+            "args": [
                 "build"
             ],
             "group": "build",
@@ -25,7 +51,9 @@
                 "env": {
                     "BUILD_FLAGS": "-C ${workspaceFolder} -v"
                 }
-            }
+            },
+            "dependsOn": "Test",
+            "dependsOrder": "sequence"
         },
         {
             "type": "shell",
