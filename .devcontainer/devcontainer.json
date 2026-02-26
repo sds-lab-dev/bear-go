@@ -6,7 +6,10 @@
         "target": "dev",
         "options": [
             "--pull"
-        ]
+        ],
+        "args": {
+            "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
+        }        
     },
     "customizations": {
         "vscode": {
@@ -22,8 +25,8 @@
             ]
         }
     },
-    "workspaceMount": "source=bear-go-workspace-volume,target=/workspace,type=volume",
-    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=bear-go-workspace-volume,target=/workspaces/${localWorkspaceFolderBasename},type=volume",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     "mounts": [
         "source=bear-go-persist-volume,target=/persist,type=volume"
     ],
@@ -36,7 +39,7 @@
         "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
         "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"
     },
-    "initializeCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
+    "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
     "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
     "postStartCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_start_script.sh \"${containerWorkspaceFolder}\""
 }

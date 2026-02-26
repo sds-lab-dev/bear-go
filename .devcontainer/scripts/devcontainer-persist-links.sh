@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+WORKSPACE_DIR="${1:-}"
+if [[ -z "$WORKSPACE_DIR" ]]; then
+  echo "Workspace path argument missing" >&2
+  exit 1
+fi
+
 PERSIST="${PERSIST:-/persist}"
 
 # Absolute paths only
@@ -13,7 +19,7 @@ DIR_TARGETS=(
 )
 
 FILE_TARGETS=(
-  "/workspace/.env"
+  "${WORKSPACE_DIR}/.env"
   "/root/.git-credentials"
 )
 

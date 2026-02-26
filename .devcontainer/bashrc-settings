@@ -60,9 +60,9 @@ export GOROOT=$HOME/.go
 export GOPATH=$HOME/go
 export PATH=$PATH:/usr/local/bin:$HOME/.local/bin:$GOPATH/bin:$GOROOT/bin
 
-if [ -f "/workspace/.env" ]; then
+if [ -f "${WORKSPACE_ROOT}/.env" ]; then
   set -a
-  . "/workspace/.env"
+  . "${WORKSPACE_ROOT}/.env"
   set +a
 fi
 
