@@ -8,8 +8,8 @@
             "--pull"
         ]
     },
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=consistent",
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
+    "workspaceFolder": "/workspace",
     "remoteUser": "root",
     "containerEnv": {
         "TZ": "Asia/Seoul"
