@@ -25,8 +25,8 @@
             ]
         }
     },
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-    "workspaceMount": "type=volume,source=bear-go-workspace-volume,target=${containerWorkspaceFolder}",
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "type=volume,source=bear-go-workspace-volume,target=/workspace",
     "mounts": [
         "type=volume,source=bear-go-claude-volume,target=/root/.claude",
         "type=volume,source=bear-go-golang-volume,target=/root/go",
