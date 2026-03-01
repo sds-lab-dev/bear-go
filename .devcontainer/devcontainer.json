@@ -25,15 +25,6 @@
             ]
         }
     },
-    "workspaceFolder": "/workspace",
-    "workspaceMount": "type=volume,source=bear-go-workspace-volume,target=/workspace",
-    "mounts": [
-        "type=volume,source=bear-go-claude-volume,target=/root/.claude",
-        "type=volume,source=bear-go-golang-volume,target=/root/go",
-        "type=volume,source=bear-go-golang-build-cache-volume,target=/root/.cache/go-build",
-        "type=volume,source=bear-go-golang-config-volume,target=/root/.config/go",
-        "type=volume,source=bear-go-persist-volume,target=/root/.persist"
-    ],
     "remoteUser": "root",
     "containerEnv": {
         "WORKSPACE_ROOT": "${containerWorkspaceFolder}",
