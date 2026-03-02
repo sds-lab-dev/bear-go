@@ -3,11 +3,11 @@
     "build": {
         "dockerfile": "Dockerfile",
         "context": "..",
-        "target": "dev",
         "options": [
             "--pull"
         ],
         "args": {
+            "GITHUB_ACTIONS": "${localEnv:GITHUB_ACTIONS}",
             "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
         }
     },
@@ -26,14 +26,25 @@
         }
     },
     "remoteUser": "root",
+    "mounts": [
+        "source=bear-go-persist-volume,target=/root/.persist,type=volume"
+    ],
     "containerEnv": {
         "WORKSPACE_ROOT": "${containerWorkspaceFolder}",
         "TZ": "Asia/Seoul",
         "IS_SANDBOX": "1",
         "ENABLE_LSP_TOOL": "1",
+        "CLAUDE_CONFIG_DIR": "/root/.persist/claude",
         "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
         "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
-        "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"
+        "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
+        "XDG_CONFIG_HOME": "/root/.persist/xdg/config",
+        "XDG_CACHE_HOME": "/root/.persist/xdg/cache",
+        "XDG_DATA_HOME": "/root/.persist/xdg/data",
+        "GOPATH": "/root/.persist/go",
+        "GOMODCACHE": "/root/.persist/go/pkg/mod",
+        "GOCACHE": "/root/.persist/go/build-cache",
+        "GOENV": "/root/.persist/go/env"
     },
     "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
     "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
