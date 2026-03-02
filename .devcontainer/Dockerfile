@@ -3,13 +3,24 @@ FROM debian:13
 
 ENV TZ=Asia/Seoul
 ENV SHELL=/bin/bash
-
+ENV IS_SANDBOX=1
+ENV ENABLE_LSP_TOOL=1
+ENV CLAUDE_CONFIG_DIR=/root/.persist/claude
+ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
+ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
+ENV XDG_CONFIG_HOME=/root/.persist/xdg/config
+ENV XDG_CACHE_HOME=/root/.persist/xdg/cache
+ENV XDG_DATA_HOME=/root/.persist/xdg/data
+ENV GOPATH=/root/.persist/go
+ENV GOMODCACHE=/root/.persist/go/pkg/mod
+ENV GOCACHE=/root/.persist/go/build-cache
+ENV GOENV=/root/.persist/go/env
 # GITHUB_ACTIONS is set to true when the image is built in GitHub Actions, and 
 # it is used to determine whether to install additional packages for local 
 # development or not.
 ARG GITHUB_ACTIONS
 ENV GITHUB_ACTIONS=${GITHUB_ACTIONS}
-
 # WORKSPACE_ROOT is the path of the container workspace.
 ARG WORKSPACE_ROOT
 ENV WORKSPACE_ROOT=${WORKSPACE_ROOT}
