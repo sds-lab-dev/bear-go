@@ -1,9 +1,10 @@
 {
     "name": "Bear AI developer in Go for local development",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "../Dockerfile",
         "context": "..",
         "options": [
+            "--target=dev",
             "--pull",
             "--progress=plain"
         ],

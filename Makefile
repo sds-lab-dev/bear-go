@@ -5,7 +5,7 @@ BUILD_VERSION := $(shell $(BUILD_VERSION_SCRIPT))
 BUILD_LDFLAGS := -ldflags '-X main.buildVersion=$(BUILD_VERSION)'
 
 build:
-	go build $(BUILD_FLAGS) $(BUILD_LDFLAGS) ./...
+	go build $(BUILD_FLAGS) $(BUILD_LDFLAGS)
 
 run:
 	go run $(RUN_FLAGS) $(BUILD_LDFLAGS) ./...
