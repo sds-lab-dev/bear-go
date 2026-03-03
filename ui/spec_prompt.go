@@ -63,6 +63,7 @@ type SpecPromptModel struct {
 	eventCh      chan tea.Msg
 	state        specPromptModelState
 	errorMessage string
+	windowSize   tea.WindowSizeMsg
 }
 
 func NewSpecPromptModel(
@@ -72,11 +73,11 @@ func NewSpecPromptModel(
 	terminalSize := GetTerminalSize()
 
 	ta := textarea.New()
-	ta.Placeholder = "Answer the clarifying questions to help the agent understand your request better"
+	ta.Placeholder = "Answer the clarifying questions to help the agent understand your request better."
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
 	ta.SetWidth(terminalSize.Width)
-	ta.SetHeight(terminalSize.Height / 2)
+	ta.SetHeight(min(10, terminalSize.Height/2))
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
 
@@ -84,12 +85,11 @@ func NewSpecPromptModel(
 	s.Spinner = spinner.Dot
 
 	model := SpecPromptModel{
-		textarea:     ta,
-		spinner:      s,
-		specWriter:   specWriter,
-		eventCh:      make(chan tea.Msg, 64),
-		state:        specStatePrepareClarifyingQuestions,
-		errorMessage: "",
+		textarea:   ta,
+		spinner:    s,
+		specWriter: specWriter,
+		eventCh:    make(chan tea.Msg, 64),
+		state:      specStatePrepareClarifyingQuestions,
 	}
 	model.specWriter.SetStreamCallbackHandler(model.defaultStreamCallback)
 	go model.getClarifyingQuestions(userRequest)
@@ -184,7 +184,8 @@ func (m SpecPromptModel) handleWindowSizeMsg(
 	log.Debug(fmt.Sprintf(
 		"received window size message: width=%d, height=%d", msg.Width, msg.Height))
 	m.textarea.SetWidth(msg.Width)
-	m.textarea.SetHeight(msg.Height / 2)
+	m.textarea.SetHeight(min(10, msg.Height/2))
+	m.windowSize = msg
 	return m, nil
 }
 
@@ -223,11 +224,11 @@ func (m SpecPromptModel) handleClarifyingQuestionsMsg(
 	log.Debug(fmt.Sprintf(
 		"received clarifying questions message: %v", msg.questions))
 	m.state = specStateWaitUserAnswers
-	var b strings.Builder
+	b := newWrappedStringBuilder(m.windowSize.Width)
 	for i, s := range msg.questions {
-		fmt.Fprintf(&b, "%v. %v\n", i+1, s)
+		fmt.Fprintf(b, "%v. %v\n", i+1, s)
 		if i+1 < len(msg.questions) {
-			fmt.Fprint(&b, "\n")
+			fmt.Fprint(b, "\n")
 		}
 	}
 	questions := fmt.Sprintf("%v\n%v",
@@ -245,7 +246,7 @@ func (m SpecPromptModel) handleUserAnswersMsg(
 	// Go to next state to prepare clarifying questions based on user's answers.
 	m.state = specStatePrepareClarifyingQuestions
 	cmd := tea.Sequence(
-		tea.Printf("Your answers:\n%v\n", msg.answers),
+		tea.Printf("Your answers:\n%v\n", wrapWords(msg.answers, m.windowSize.Width)),
 		func() tea.Msg {
 			go m.getClarifyingQuestions(msg.answers)
 			return <-m.eventCh
@@ -259,7 +260,7 @@ func (m SpecPromptModel) handleUserFeedbackMsg(
 ) (tea.Model, tea.Cmd) {
 	log.Debug(fmt.Sprintf("received user feedback message: %v", msg.feedback))
 	cmd := tea.Sequence(
-		tea.Printf("Your feedback:\n%v\n", msg.feedback),
+		tea.Printf("Your feedback:\n%v\n", wrapWords(msg.feedback, m.windowSize.Width)),
 		func() tea.Msg {
 			go m.reviseSpec(msg.feedback)
 			return <-m.eventCh
@@ -389,7 +390,7 @@ func (m SpecPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 func (m SpecPromptModel) View() string {
 	log.Debug(fmt.Sprintf("rendering spec prompt view: state=%v, errorMessage=%v", m.state, m.errorMessage))
 
-	var b strings.Builder
+	b := newWrappedStringBuilder(m.windowSize.Width)
 
 	switch m.state {
 	case specStatePrepareClarifyingQuestions:

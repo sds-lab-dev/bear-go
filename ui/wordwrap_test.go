@@ -46,12 +46,20 @@ func TestWrapWords_ZeroWidth(t *testing.T) {
 
 func TestWrapWords_SingleLongWord(t *testing.T) {
 	lines := wrapWords("abcdefghijklmnop", 5)
-	// reflow/wordwrap은 단일 단어를 분리하지 않으므로 1줄이어야 한다.
-	if len(lines) != 1 {
-		t.Fatalf("expected 1 line for single long word, got %d: %v", len(lines), lines)
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines for single long word, got %d: %v", len(lines), lines)
 	}
-	if lines[0] != "abcdefghijklmnop" {
-		t.Errorf("expected %q, got %q", "abcdefghijklmnop", lines[0])
+	if lines[0] != "abcde" {
+		t.Errorf("expected %q, got %q", "abcde", lines[0])
+	}
+	if lines[1] != "fghij" {
+		t.Errorf("expected %q, got %q", "fghij", lines[1])
+	}
+	if lines[2] != "klmno" {
+		t.Errorf("expected %q, got %q", "klmno", lines[2])
+	}
+	if lines[3] != "p" {
+		t.Errorf("expected %q, got %q", "p", lines[3])
 	}
 }
 

@@ -27,17 +27,18 @@ type UserRequestPromptModel struct {
 	resolveEditor   func() (editorCommand, error)
 	tempFilePath    string
 	launchingEditor bool
+	windowSize      tea.WindowSizeMsg
 }
 
 func NewUserRequestPromptModel() UserRequestPromptModel {
 	terminalSize := GetTerminalSize()
 
 	ta := textarea.New()
-	ta.Placeholder = "Implement a function that calculates the factorial of a number."
+	ta.Placeholder = "For example, implement a function that calculates the factorial of a number."
 	ta.ShowLineNumbers = false
 	ta.CharLimit = 0
 	ta.SetWidth(terminalSize.Width)
-	ta.SetHeight(terminalSize.Height / 2)
+	ta.SetHeight(min(10, terminalSize.Height/2))
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 	ta.Focus()
 
@@ -65,7 +66,8 @@ func (m UserRequestPromptModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("received window size message: width=%d, height=%d", msg.Width, msg.Height))
 		m.textarea.SetWidth(msg.Width)
-		m.textarea.SetHeight(msg.Height / 2)
+		m.textarea.SetHeight(min(10, msg.Height/2))
+		m.windowSize = msg
 		return m, nil
 	}
 
@@ -114,8 +116,7 @@ func (m UserRequestPromptModel) handleEnter() (tea.Model, tea.Cmd) {
 
 	// We're done here.
 	m.errorMessage = ""
-	var b strings.Builder
-
+	b := newWrappedStringBuilder(m.windowSize.Width)
 	b.WriteString(renderAgentInactivePrompt(successStyle.Render("You requested as follows:"), true))
 	b.WriteByte('\n')
 	b.WriteString(m.textarea.Value())
@@ -214,7 +215,7 @@ func (m UserRequestPromptModel) View() string {
 		return ""
 	}
 
-	var b strings.Builder
+	b := newWrappedStringBuilder(m.windowSize.Width)
 	b.WriteString(renderAgentActivePrompt("Enter your request:", true))
 	b.WriteByte('\n')
 	b.WriteString("Press Enter to confirm, Shift+Enter or Alt+Enter for newline, Ctrl+G for external editor.")
