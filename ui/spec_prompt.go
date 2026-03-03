@@ -99,6 +99,11 @@ func NewSpecPromptModel(
 
 func (m SpecPromptModel) defaultStreamCallback(msg ai.StreamMessage) {
 	log.Debug(fmt.Sprintf("sending a stream message to the event channel: %#v", msg))
+	if msg.Type == ai.StreamMessageTypeToolCallStructuredOutput {
+		// We don't render anything for StructuredOutput tool call messages.
+		log.Debug("received a StructuredOutput tool call stream message")
+		return
+	}
 	m.eventCh <- streamEventMsg{StreamMessage: msg}
 	log.Debug("stream message sent to event channel")
 }

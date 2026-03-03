@@ -86,6 +86,7 @@ type StreamMessageType int
 const (
 	StreamMessageTypeThinking StreamMessageType = iota
 	StreamMessageTypeToolCall
+	StreamMessageTypeToolCallStructuredOutput
 	StreamMessageTypeToolCallResult
 	StreamMessageTypeText
 )

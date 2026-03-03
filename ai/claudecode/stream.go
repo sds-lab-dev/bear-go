@@ -85,18 +85,27 @@ func (msg Message) toAiStreamMessage() ai.StreamMessage {
 
 	// For simplicity, we only convert the first content block to an
 	// ai.StreamMessage.
+	content := msg.Content[0]
+	// Special handling for StructuredOutput tool call.
+	if content.Type == "tool_use" && content.Name == "StructuredOutput" {
+		return ai.StreamMessage{
+			Type:    ai.StreamMessageTypeToolCallStructuredOutput,
+			Content: "",
+		}
+	}
+
 	return ai.StreamMessage{
-		Type:    msg.Content[0].StreamMessageType(),
-		Content: normalizeNewlines(msg.Content[0].StreamMessageContent()),
+		Type:    content.StreamMessageType(),
+		Content: normalizeNewlines(content.StreamMessageContent()),
 	}
 }
 
 func normalizeNewlines(s string) string {
-    // 1) Windows CRLF -> LF
-    s = strings.ReplaceAll(s, "\r\n", "\n")
-    // 2) CR -> LF
-    s = strings.ReplaceAll(s, "\r", "\n")
-    return s
+	// 1) Windows CRLF -> LF
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	// 2) CR -> LF
+	s = strings.ReplaceAll(s, "\r", "\n")
+	return s
 }
 
 type ContentBlock struct {
