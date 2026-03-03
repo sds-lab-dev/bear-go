@@ -4,7 +4,8 @@
         "dockerfile": "Dockerfile",
         "context": "..",
         "options": [
-            "--pull"
+            "--pull",
+            "--progress=plain"
         ],
         "args": {
             "GITHUB_ACTIONS": "${localEnv:GITHUB_ACTIONS}",
