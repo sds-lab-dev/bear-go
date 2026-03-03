@@ -50,7 +50,9 @@ RUN make build \
     && mkdir -p /app \
     && mv bear-go /app
 
-# Devcontainer image for Go local development.
+# Devcontainer image for Go development. This image may be used in both local 
+# development and GitHub Actions, so additional packages for local development 
+# are installed conditionally.
 FROM toolchain AS dev
 
 # GITHUB_ACTIONS is set to true when the image is built in GitHub Actions, and 
