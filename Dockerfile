@@ -1,28 +1,27 @@
 # Toolchain image to build Go.
 FROM debian:13 AS toolchain
 
-USER root
 SHELL ["/bin/bash", "-lc"]
 
-ENV TZ=Asia/Seoul
-ENV IS_SANDBOX=1
-ENV ENABLE_LSP_TOOL=1
-ENV CLAUDE_CONFIG_DIR=/root/.persist/claude
-ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
-ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
-ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
-ENV XDG_CONFIG_HOME=/root/.persist/xdg/config
-ENV XDG_CACHE_HOME=/root/.persist/xdg/cache
-ENV XDG_DATA_HOME=/root/.persist/xdg/data
-ENV GOPATH=/root/.persist/go
-ENV GOMODCACHE=/root/.persist/go/pkg/mod
-ENV GOCACHE=/root/.persist/go/build-cache
-ENV GOENV=/root/.persist/go/env
-# WORKSPACE_ROOT is the path of the container workspace. The default value should
-# be specified for manual Docker build process, but it will be overridden by the 
-# devcontainer configuration.
+# PERSIST_VOLUME_DIR is the path of the Docker volume directory to persist 
+# configurations and caches across container restarts.
+ARG PERSIST_VOLUME_DIR=/persist
+ENV PERSIST_VOLUME_DIR=${PERSIST_VOLUME_DIR}
+
+# WORKSPACE_ROOT is the path of the container workspace. The default value 
+# should be specified for manual Docker build process, but it will be 
+# overridden by the devcontainer configuration.
 ARG WORKSPACE_ROOT=/workspace
 ENV WORKSPACE_ROOT=${WORKSPACE_ROOT}
+
+ENV TZ=Asia/Seoul
+ENV XDG_CONFIG_HOME=${PERSIST_VOLUME_DIR}/xdg/config
+ENV XDG_CACHE_HOME=${PERSIST_VOLUME_DIR}/xdg/cache
+ENV XDG_DATA_HOME=${PERSIST_VOLUME_DIR}/xdg/data
+ENV GOPATH=${PERSIST_VOLUME_DIR}/go
+ENV GOMODCACHE=${PERSIST_VOLUME_DIR}/go/pkg/mod
+ENV GOCACHE=${PERSIST_VOLUME_DIR}/go/build-cache
+ENV GOENV=${PERSIST_VOLUME_DIR}/go/env
 
 WORKDIR /var/tmp/scripts
 COPY .devcontainer/scripts/install_base_packages.sh .
@@ -52,17 +51,18 @@ RUN make build \
     && mv bear-go /app
 
 # Devcontainer image for Go development. This image may be used in both local 
-# development and GitHub Actions, so additional packages for local development 
-# are installed conditionally.
+# development and GitHub Actions, so additional packages for local 
+# development are installed conditionally.
 FROM toolchain AS dev
 
-# GITHUB_ACTIONS is set to true when the image is built in GitHub Actions, and 
-# it is used to determine whether to install additional packages for local 
-# development or not.
+# GITHUB_ACTIONS is set to true when the image is built in GitHub Actions, 
+# and it is used to determine whether to install additional packages for 
+# local development or not.
 ARG GITHUB_ACTIONS
 ENV GITHUB_ACTIONS=${GITHUB_ACTIONS}
 
-# Install additional packages for local development if not running in GitHub Actions.
+# Install additional packages for local development if not running in GitHub 
+# Actions.
 WORKDIR /var/tmp/scripts
 COPY .devcontainer/scripts/install_ai_assistants.sh .
 COPY .devcontainer/scripts/install_watchexec.sh .

@@ -1,5 +1,6 @@
 {
     "name": "Bear AI developer in Go for local development",
+    "remoteUser": "root",
     "build": {
         "dockerfile": "../Dockerfile",
         "context": "..",
@@ -9,6 +10,7 @@
             "--progress=plain"
         ],
         "args": {
+            "PERSIST_VOLUME_DIR": "/root/.persist",
             "GITHUB_ACTIONS": "${localEnv:GITHUB_ACTIONS}",
             "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
         }
@@ -27,7 +29,6 @@
             ]
         }
     },
-    "remoteUser": "root",
     "mounts": [
         "source=bear-go-persist-volume,target=/root/.persist,type=volume"
     ],
