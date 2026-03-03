@@ -1,6 +1,7 @@
 # Toolchain image to build Go.
 FROM debian:13 AS toolchain
 
+USER root
 SHELL ["/bin/bash", "-lc"]
 
 ENV TZ=Asia/Seoul
@@ -76,5 +77,9 @@ WORKDIR ${WORKSPACE_ROOT}
 # Final runtime image to deploy the compiled binary.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime
 
+ENV BEAR_LOG_DIR=/app/logs
+
+WORKDIR /app
 COPY --from=builder /app/bear-go /app/bear-go
+
 ENTRYPOINT ["/app/bear-go"]

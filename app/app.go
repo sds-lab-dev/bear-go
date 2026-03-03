@@ -176,14 +176,24 @@ func appMain(sessionID string, aiPorts ai.Ports) error {
 	return nil
 }
 
-func Run(buildVersion string, sessionID string, aiPorts ai.Ports) {
-	log.InitLogger(sessionID)
+type Config struct {
+	LogDir       string
+	BuildVersion string
+	SessionID    string
+	AIPorts      ai.Ports
+}
+
+func Run(cfg Config) {
+	if err := log.InitLogger(cfg.SessionID, cfg.LogDir); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize log file for session %s: %v\n", cfg.SessionID, err)
+		os.Exit(1)
+	}
 	defer log.CloseLogger()
 
 	fmt.Printf("Log file initialized at %s\n", log.GetLogPath())
-	log.Info(fmt.Sprintf("Starting application: sessionID=%v, buildVersion=%v", sessionID, buildVersion))
+	log.Info(fmt.Sprintf("Starting application: sessionID=%v, buildVersion=%v", cfg.SessionID, cfg.BuildVersion))
 
-	if err := appMain(sessionID, aiPorts); err != nil {
+	if err := appMain(cfg.SessionID, cfg.AIPorts); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		log.Fatal(err.Error())
 	}

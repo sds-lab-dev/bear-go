@@ -35,7 +35,7 @@ func TestInitLogger_CreatesLogFile(t *testing.T) {
 }
 
 func TestInitLogger_InvalidPath(t *testing.T) {
-	err := InitLogger("../../invalid/path/session")
+	err := InitLogger("../../invalid/path/session", "../../invalid/log/dir")
 	if err == nil {
 		t.Fatal("expected error for invalid log path")
 	}

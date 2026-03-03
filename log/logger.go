@@ -44,9 +44,12 @@ type logger struct {
 	logPath string
 }
 
-func InitLogger(sessionID string) error {
-	logPath := fmt.Sprintf("/var/log/bear-%s.log", sessionID)
+func InitLogger(sessionID string, logDir string) error {
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return fmt.Errorf("failed to create log directory %s: %w", logDir, err)
+	}
 
+	logPath := fmt.Sprintf("%s/bear-%s.log", logDir, sessionID)
 	file, err := os.OpenFile(
 		logPath,
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND,
