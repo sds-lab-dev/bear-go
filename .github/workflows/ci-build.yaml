@@ -28,7 +28,6 @@ on:
 env:
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}
-  IMAGE_IDENTIFIER: bear-go
 
 jobs:
   build:
