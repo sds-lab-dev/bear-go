@@ -56,9 +56,8 @@ unset LC_ALL
 export LANG=en_US.UTF-8
 export LC_CTYPE=ko_KR.UTF-8
 export LESSCHARSET=utf-8
-export GOROOT=$HOME/.go
-export GOPATH=$HOME/go
-export PATH=$PATH:/usr/local/bin:$HOME/.local/bin:$GOPATH/bin:$GOROOT/bin
+export PATH=$PATH:$HOME/.local/bin
+export VIMINIT='set encoding=utf-8 | set mouse='
 
 if [ -f "${WORKSPACE_ROOT}/.env" ]; then
   set -a

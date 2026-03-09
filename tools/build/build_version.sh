@@ -5,16 +5,19 @@ REV_LEN="${REV_LEN:-12}"
 DIFF_LEN="${DIFF_LEN:-12}"
 DIFF_PAD_CHAR="${DIFF_PAD_CHAR:-0}"
 
-# Get the short git revision hash if we're in a git repository.
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    GIT_REV="$(git rev-parse --short="${REV_LEN}" HEAD 2>/dev/null || true)"
+# Get the short git revision hash if we're in a git repository. CI_GIT_SHA is the Git SHA of the
+# current commit, and it only exists in GitHub Actions. If it exists, we use it to get the git
+# revision. Otherwise, in local devcontainer, we use git rev-parse to get the git revision of the
+# current HEAD.
+if [[ -n "${CI_GIT_SHA:-}" ]]; then
+    GIT_REV="${CI_GIT_SHA:0:${REV_LEN}}"
 else
-    GIT_REV=""
+    GIT_REV="$(git rev-parse --short="${REV_LEN}" HEAD)"
 fi
 
 if [[ -z "${GIT_REV}" ]]; then
-  echo "ERROR: git rev-parse failed." >&2
-  exit 1
+    echo "ERROR: git rev-parse failed." >&2
+    exit 1
 fi
 
 if [[ -z "$(git status --porcelain=v1 --untracked-files=normal 2>/dev/null || true)" ]]; then

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+make fmt-check
+if [ $? -ne 0 ]; then
+    echo "You MUST run 'make fmt' to format your code before committing."
+    exit 1
+fi

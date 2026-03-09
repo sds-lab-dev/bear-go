@@ -32,3 +32,4 @@ git config --global gc.reflogExpire 360.days
 git config --global gc.reflogExpireUnreachable 180.days
 git config --global push.autoSetupRemote true
 git config --global pull.ff only
+git config --global core.hooksPath .githooks

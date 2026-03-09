@@ -1,17 +1,22 @@
-.PHONY: build run test staticcheck clean
+.PHONY: build run test fmt fmt-check staticcheck clean
 
-BUILD_VERSION_SCRIPT := ./.github/scripts/build_version.sh
-BUILD_VERSION := $(shell $(BUILD_VERSION_SCRIPT))
-BUILD_LDFLAGS := -ldflags '-X main.buildVersion=$(BUILD_VERSION)'
+BUILD_VERSION_SCRIPT := ./tools/build/build_version.sh
 
 build:
-	go build $(BUILD_FLAGS) $(BUILD_LDFLAGS)
+	export BUILD_VERSION="$$(bash $(BUILD_VERSION_SCRIPT))"; \
+    go build $(BUILD_FLAGS) -ldflags "-X main.buildVersion=$$BUILD_VERSION"
 
 run:
 	go run $(RUN_FLAGS) $(BUILD_LDFLAGS) ./...
 
 test:
 	go test $(TEST_FLAGS) ./...
+
+fmt:
+	go fmt $(FMT_FLAGS) ./...
+
+fmt-check:
+	test -z "$$(gofmt -l .)"
 
 staticcheck:
 	staticcheck $(STATICCHECK_FLAGS) ./...

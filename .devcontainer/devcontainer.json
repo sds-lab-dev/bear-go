@@ -10,8 +10,8 @@
             "--progress=plain"
         ],
         "args": {
-            "PERSIST_VOLUME_DIR": "/root/.persist",
-            "GITHUB_ACTIONS": "${localEnv:GITHUB_ACTIONS}",
+            "XDG_VOLUME_DIR": "/var/devcontainer/xdg",
+            "GOPATH_VOLUME_DIR": "/var/devcontainer/go",
             "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
         }
     },
@@ -24,13 +24,15 @@
                 }
             },
             "extensions": [
+                "golang.go",
                 "github.copilot-chat",
-                "golang.go"
+                "openai.chatgpt"
             ]
         }
     },
     "mounts": [
-        "source=bear-go-persist-volume,target=/root/.persist,type=volume"
+        "source=bear-go-xdg-volume,target=/var/devcontainer/xdg,type=volume",
+        "source=bear-go-gopath-volume,target=/var/devcontainer/go,type=volume"
     ],
     "containerEnv": {},
     "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",

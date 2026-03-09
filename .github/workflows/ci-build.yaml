@@ -9,16 +9,15 @@ concurrency:
 
 on:
   # Pull Request(PR)가 생성되거나, 기존 PR에 새로운 커밋이 푸시(업데이트)되거나, 닫혔던 PR이 
-  # 다시 열릴 때 실행됨.
+  # 다시 열릴 때 실행됨. PR의 타겟 브랜치가 main인 경우에만 실행됨.
   pull_request:
+    branches: [main]
   # main 브랜치로 직접 커밋을 Push 하거나, PR이 main 브랜치로 Merge 되어 새로운 커밋이 생겼을 
   # 때 실행됨. PR 단계에서 이미 CI 빌드를 통과 했더라도 해당 PR이 main 브랜치에 병합 되기 전까지
   # 시간차가 존재할 수 있기 때문에, main 브랜치에 새로운 커밋이 생길 때마다 CI 빌드를 다시 실행해야 
   # 한다.
   push:
-    branches:
-    - main
-    - "!gh-readonly-queue/**"
+    branches: [main]
   # 수동으로 원할 때 직접 워크플로우를 실행 가능.
   workflow_dispatch:
   # PR을 main 브랜치의 Merge Queue에 추가 했을 때 실행됨.
@@ -55,15 +54,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pre-build image and build apps in devcontainer
-        uses: devcontainers/ci@v0.3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push runtime image
+        uses: docker/build-push-action@v7
         with:
-          imageName: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}
-          cacheFrom: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}
-          push: always
-          runCmd: |
-            test -z $(gofmt -l .)
-            staticcheck ./...
-            go build ./...
-          env: |
-            GOFLAGS=-buildvcs=false
+          context: .
+          file: ./Dockerfile
+          target: runtime
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha,scope=bear-go-runtime
+          cache-to: type=gha,scope=bear-go-runtime,mode=max
+          build-args: |
+            CI_GIT_SHA=${{ github.sha }}
