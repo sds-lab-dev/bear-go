@@ -2,12 +2,12 @@
 
 This project, named **“Bear AI Developer,”** is a TUI-based application that supports specification-driven software development on top of the Claude Code CLI. The application is written in Go language. You can build a consistent development environment using Dev Containers.
 
-## Requirements
+## 1. Requirements
 
 - The Claude Code CLI must be installed, and its executable path must be available in `$PATH`.
 - A valid Anthropic API key must be set in the `ANTHROPIC_API_KEY` environment variable.
 
-## Features
+## 2. Features
 
 - Specification writing
 - Development planning based on the specification
@@ -15,7 +15,7 @@ This project, named **“Bear AI Developer,”** is a TUI-based application that
 - Code review
 - Documentation support
 
-## Operation flow
+## 3. Operation Flow
 
 The Bear AI Developer application supports the following primary development flow:
 
@@ -29,21 +29,21 @@ The Bear AI Developer application supports the following primary development flo
 8. User feedback and approval loop
 9. Documentation
 
-### Requirements gathering
+### Requirements Gathering
 
 - Users can enter requirements through a terminal user interface.
 - The entered requirements are analyzed via the Claude Code CLI, and additional questions are asked to enable a clear specification.
 - Users provide answers to the additional questions to refine and concretize the requirements.
 - The additional-question loop continues until the AI model determines that no further questions are necessary.
 
-### Writing the specification document
+### Writing the Specification Document
 
 - Once requirements gathering is complete, the **Specification Agent** produces a draft specification document and presents it to the user.
 - The user can provide feedback on the draft specification and request revisions as needed.
 - The feedback and revision loop continues until the user is satisfied with the specification.
 - The final approved specification moves to the development planning stage.
 
-### Development planning
+### Development Planning
 
 - Based on the approved specification, the **Planning Agent** produces a draft development plan document and presents it to the user.
 - The user can provide feedback on the development plan and request revisions as needed.
@@ -52,14 +52,14 @@ The Bear AI Developer application supports the following primary development flo
 - If there are dependencies among tasks, the development plan must represent a DAG (Directed Acyclic Graph) as an adjacency list to specify the execution order.
 - The final approved development plan moves to the code writing stage.
 
-## Code writing
+## 4. Code Writing
 
 - Following the approved specification and development plan, _n_ **Coding Agents** run in multiple threads and write code in parallel.
 - A dedicated agent is assigned to each individual task in the development plan. Each agent generates code independently for its assigned task.
 - If there are inter-task dependencies, agents follow the DAG specified in the development plan and execute tasks in dependency order. For tasks with dependencies, the preceding task's session content is converted into a handoff document and passed to the subsequent task agents.
 - Each agent uses the Claude Code CLI to write code.
 
-## Code review
+## 5. Code Review
 
 - The written code is examined by the **Review Agent**. The Review Agent runs in parallel on the same threads in which the Coding Agents executed.
 - The Review Agent checks code quality, style, and whether functional requirements are satisfied, and if necessary sends revision requests to the Coding Agents.
@@ -69,14 +69,14 @@ The Bear AI Developer application supports the following primary development flo
   - Approves the code as-is if it is reasonably close to the criteria and the remaining issues are minor.
   - Otherwise, explains the blockers to the user and request a guidance on how to proceed.
 
-## User feedback and approval loop
+## 6. User Feedback and Approval Loop
 
 - After all tasks in the development plan are completed and code review passes, the process requires the user's final approval.
 - The user reviews the final code and can either approve it or request additional changes.
 - If the user requests additional changes, the request is handed back to the Coding Agents for revision work. The revised code is reviewed again by the Review Agent, and this loop continues until the user approves.
 - Once the user approves, the development process is complete.
 
-## Documentation
+## 7. Documentation
 
 - Throughout the steps above, each agent records its work as documentation.
 - These documents are provided together with the project's final deliverables and can be used later for maintenance and reference.
@@ -85,7 +85,7 @@ The Bear AI Developer application supports the following primary development flo
 
 # Mandatory Rules for AI Assistants
 
-## Language
+## 1. Language
 
 - Always answer in Korean unless the user explicitly requests English output.
 - You MUST write all explanations, reasoning, and narrative text in Korean.
@@ -95,7 +95,7 @@ The Bear AI Developer application supports the following primary development flo
   - Commit messages and comments in code must be in English to maintain consistency and clarity in the version history.
 - If you use English for a specific phrase to avoid ambiguity, keep it minimal and immediately continue in Korean.
 
-## Coding conventions
+## 2. Coding Conventions
 
 - You MUST follow the coding conventions in order:
   1. Follow the given instructions described below.
@@ -139,9 +139,9 @@ The Bear AI Developer application supports the following primary development flo
   - If the application already has "two eyes," do NOT take the easy route by attaching a "third eye" on the side.
   - Instead, modify the structure of the existing eyes so it can be done with only the two eyes.
 
-## Coding guardrails
+## 3. Coding Guardrails
 
-### Think before coding
+### Think Before Coding
 
 **Do NOT assume. Do NOT hide confusion. Surface tradeoffs.**
 
@@ -155,7 +155,7 @@ Before implementing:
   - Blocking ambiguity: stop and ask.
   - Non-blocking ambiguity: choose a reasonable default, state it, and proceed.
 
-### Simplicity first
+### Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
 
@@ -177,7 +177,7 @@ Ask yourself:
 "Would a senior engineer say this is overcomplicated?"
 If yes, simplify.
 
-### Surgical changes
+### Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
 
@@ -205,7 +205,7 @@ When your changes create orphans:
 The test:
 Every changed line should trace directly to the user's request or to making the requested change correct and verifiable.
 
-### Goal-driven execution
+### Goal-driven Execution
 
 **Define success criteria. Loop until verified.**
 
@@ -228,3 +228,7 @@ Verification rules:
 - The verification loop continues until all criteria are met or the maximum number of iterations (default: 5) is reached.
 - If the criteria does not meet after the maximum iterations:
   - Explains the blockers to the user and request a guidance on how to proceed.
+
+## 4. Commit Message Conventions
+
+Detailed guidelines for commit messages can be found in `COMMIT_CONVENTION.md`. All contributors MUST follow these rules to maintain a consistent commit history.
