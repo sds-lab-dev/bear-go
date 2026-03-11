@@ -1,20 +1,11 @@
 {
     "name": "Bear AI developer in Go for local development",
-    "remoteUser": "root",
-    "build": {
-        "dockerfile": "../Dockerfile",
-        "context": "..",
-        "options": [
-            "--target=dev",
-            "--pull",
-            "--progress=plain"
-        ],
-        "args": {
-            "XDG_VOLUME_DIR": "/var/devcontainer/xdg",
-            "GOPATH_VOLUME_DIR": "/var/devcontainer/go",
-            "WORKSPACE_ROOT": "${containerWorkspaceFolder}"
-        }
-    },
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "dev",
+    "remoteUser": "devuser",
+    "workspaceFolder": "/workspace",
+    "overrideCommand": true,
+    "shutdownAction": "stopCompose",
     "customizations": {
         "vscode": {
             "settings": {
@@ -30,11 +21,15 @@
             ]
         }
     },
-    "mounts": [
-        "source=bear-go-xdg-volume,target=/var/devcontainer/xdg,type=volume",
-        "source=bear-go-gopath-volume,target=/var/devcontainer/go,type=volume"
-    ],
-    "containerEnv": {},
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": false,
+            "username": "devuser",
+            "userUid": "1001",
+            "userGid": "1001",
+            "upgradePackages": false
+        }
+    },
     "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
     "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
     "postStartCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_start_script.sh \"${containerWorkspaceFolder}\""

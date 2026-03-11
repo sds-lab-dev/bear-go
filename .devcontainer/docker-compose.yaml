@@ -1,0 +1,36 @@
+# This `docker-compose.yaml` is used by the devcontainer to start the development container.
+#
+# Set following environment variables in your host shell before starting the devcontainer to show
+# the raw container build logs in the devcontainer output:
+#
+# ```
+# export COMPOSE_PROGRESS=plain
+# export BUILDKIT_PROGRESS=plain
+# ```
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: dev
+      pull: true
+      args:
+        GIT_CREDENTIALS_DIR: ${GIT_CREDENTIALS_DIR}
+        XDG_DIR: ${XDG_DIR}
+        GOPATH_DIR: ${GOPATH_DIR}
+    volumes:
+      # The workspace MUST be mounted to the same as `workspaceFolder` in `devcontainer.json`.
+      - ..:/workspace:consistent
+      - bear-go-git-credentials-volume:${GIT_CREDENTIALS_DIR}
+      - bear-go-xdg-volume:${XDG_DIR}
+      - bear-go-gopath-volume:${GOPATH_DIR}
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+
+volumes:
+  bear-go-git-credentials-volume:
+  bear-go-xdg-volume:
+  bear-go-gopath-volume:

@@ -55,6 +55,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
+        id: setup-buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push runtime image
@@ -63,9 +64,12 @@ jobs:
           context: .
           file: ./Dockerfile
           target: runtime
-          push: true
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}
           cache-from: type=gha,scope=bear-go-runtime
           cache-to: type=gha,scope=bear-go-runtime,mode=max
           build-args: |
             CI_GIT_SHA=${{ github.sha }}
+            OVERLAYS_DIR=/var/overlays
+            GOPATH_DIR=/var/overlays/go
+            GOROOT_DIR=/var/overlays/go-root

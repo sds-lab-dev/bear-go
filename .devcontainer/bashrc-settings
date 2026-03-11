@@ -52,10 +52,6 @@ purple='\[\e[35m\]'
 # PS1: $WORKING_DIRECTORY: ($BRANCH_NAME) ($STATUS_FLAGS)
 PS1="\w: ${purple}\$(git_branch)${reset}\n\\$ "
 
-unset LC_ALL
-export LANG=en_US.UTF-8
-export LC_CTYPE=ko_KR.UTF-8
-export LESSCHARSET=utf-8
 export PATH=$PATH:$HOME/.local/bin
 export VIMINIT='set encoding=utf-8 | set mouse='
 

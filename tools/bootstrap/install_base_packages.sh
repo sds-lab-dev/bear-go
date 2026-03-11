@@ -45,5 +45,6 @@ apt-get \
 rm -rf /var/lib/apt/lists/*
 
 update-ca-certificates
-
+printf "en_US.UTF-8 UTF-8\nko_KR.UTF-8 UTF-8\n" > /etc/locale.gen
+locale-gen
 ln -s /usr/bin/python3 /usr/bin/python

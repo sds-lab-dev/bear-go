@@ -1,0 +1,16 @@
+.git/
+.github/
+
+.vscode/
+.idea/
+*.iml
+*.rs.bk
+
+recipe.json
+
+.env
+*.env
+
+.bear/
+
+README.md

@@ -14,3 +14,16 @@ if [[ -z "$WORKSPACE_DIR" ]]; then
   echo "Workspace path argument missing" >&2
   exit 1
 fi
+
+# REMOTE_USER MUST be the same as `remoteUser` and `username` of common-utils feature specified in
+# `devcontainer.json`.
+REMOTE_USER="devuser"
+
+# Set ownership of the named volumes to the non-root user to ensure they are writable.
+sudo chown -R "$REMOTE_USER:$REMOTE_USER" \
+  "$GOPATH" \
+  "$GOROOT" \
+  "$GIT_CREDENTIALS_DIR" \
+  "$XDG_CONFIG_HOME" \
+  "$XDG_CACHE_HOME" \
+  "$XDG_DATA_HOME"

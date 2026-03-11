@@ -5,23 +5,23 @@ SHELL ["/bin/bash", "-c"]
 
 ENV TZ=Asia/Seoul
 
-# WORKSPACE_ROOT is the path of the container workspace. The default value 
-# should be specified for manual Docker build process, but it will be 
-# overridden by the devcontainer configuration.
-ARG WORKSPACE_ROOT=/workspace
-ENV WORKSPACE_ROOT=${WORKSPACE_ROOT}
+# OVERLAYS_DIR is the base path to group all directories that are used as overlay volumes in this
+# image. It does not persist across container restarts. Each subdirectory under it is used for a
+# specific purpose, such as storing Rust toolchain and Cargo cache files.
+ARG OVERLAYS_DIR=/var/overlays
 
-# GOPATH_VOLUME_DIR is the path of the Docker volume to persist Go compiled artifacts to speed up
-# subsequent builds. If it is not set, use the default path inside the container, which does 
-# not persist across restarts.
-ARG GOPATH_VOLUME_DIR=/var/local/go
-ENV GOPATH=${GOPATH_VOLUME_DIR}
-ENV GOMODCACHE=${GOPATH_VOLUME_DIR}/pkg/mod
-ENV GOCACHE=${GOPATH_VOLUME_DIR}/build-cache
-ENV GOENV=${GOPATH_VOLUME_DIR}/env
-# GOROOT MUST NOT be in the persistent volume because it may cause unintended behavior due to 
+# GOPATH_DIR is the path of the Docker volume to persist Go compiled artifacts to speed up
+# subsequent builds. If it is not set, use the default path inside the container, which does not
+# persist across restarts.
+ARG GOPATH_DIR=${OVERLAYS_DIR}/go
+ENV GOPATH=${GOPATH_DIR}
+ENV GOMODCACHE=${GOPATH}/pkg/mod
+ENV GOCACHE=${GOPATH}/build-cache
+ENV GOENV=${GOPATH}/env
+# GOROOT_DIR MUST NOT be in the persistent volume because it may cause unintended behavior due to 
 # stale toolchain files.
-ENV GOROOT=/usr/local/go
+ARG GOROOT_DIR=${OVERLAYS_DIR}/go-root
+ENV GOROOT=${GOROOT_DIR}
 
 ENV PATH=${GOPATH}/bin:${GOROOT}/bin:/usr/local/bin:${PATH}
 
@@ -29,24 +29,27 @@ WORKDIR /var/tmp/scripts
 COPY tools/bootstrap/install_base_packages.sh .
 COPY tools/bootstrap/install_golang.sh .
 COPY tools/bootstrap/install_golang_extra_packages.sh .
-RUN chmod +x ./*.sh \
-    && ./install_base_packages.sh \
-    && ./install_golang.sh --version 1.26.0 \
-    && ./install_golang_extra_packages.sh
+RUN chmod +x ./*.sh && \
+    ./install_base_packages.sh && \
+    ./install_golang.sh --version 1.26.0 && \
+    ./install_golang_extra_packages.sh
 
-WORKDIR /root
+ENV LANG=en_US.UTF-8
+ENV LC_CTYPE=ko_KR.UTF-8
+ENV LESSCHARSET=utf-8
+
 COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
-RUN cat /tmp/bashrc-settings > .bashrc \
-    && rm /tmp/bashrc-settings \
-    && echo "set encoding=utf-8" > .vimrc \
-    && echo "set mouse=" >> .vimrc \
-    && localedef -f UTF-8 -i ko_KR ko_KR.UTF-8 \
-    && localedef -f UTF-8 -i en_US en_US.UTF-8
+RUN cat /tmp/bashrc-settings >> /etc/bash.bashrc && \
+    printf "\n" >> /etc/bash.bashrc && \
+    rm /tmp/bashrc-settings && \
+    localedef -f UTF-8 -i ko_KR ko_KR.UTF-8 && \
+    localedef -f UTF-8 -i en_US en_US.UTF-8
+
+WORKDIR /opt/devcontainer
 
 # Builder image to pass a compiled binary to the final runtime image.
 FROM toolchain AS builder
 
-WORKDIR ${WORKSPACE_ROOT}
 COPY . .
 
 # CI_GIT_SHA is the Git SHA of the current commit, and it only exists in GitHub Actions.
@@ -64,22 +67,28 @@ ENV CI_GIT_SHA=${CI_GIT_SHA}
 RUN make fmt-check staticcheck test
 
 # Build the application binary and move it to /app directory for the runtime image.
-RUN make build \
-    && mkdir -p /app \
-    && mv bear-go /app
+RUN make build && \
+    mkdir -p /app && \
+    mv bear-go /app
 
 # Devcontainer image for Go development. This image may be used in both local 
 # development and GitHub Actions, so additional packages for local 
 # development are installed conditionally.
 FROM toolchain AS dev
 
-# XDG_VOLUME_DIR is the path of the Docker volume directory to persist XDG configurations and
-# caches across container restarts. If it is not set, use the default path inside the container,
-# which does not persist across restarts.
-ARG XDG_VOLUME_DIR=/var/local/xdg
-ENV XDG_CONFIG_HOME=${XDG_VOLUME_DIR}/config
-ENV XDG_CACHE_HOME=${XDG_VOLUME_DIR}/cache
-ENV XDG_DATA_HOME=${XDG_VOLUME_DIR}/data
+# GIT_CREDENTIALS_DIR is the path of the Docker volume directory to persist Git credentials across
+# container restarts. If it is not set, use the default path inside the container, which does not
+# persist across restarts.
+ARG GIT_CREDENTIALS_DIR=${OVERLAYS_DIR}/git-credentials
+ENV GIT_CREDENTIALS_DIR=${GIT_CREDENTIALS_DIR}
+
+# XDG_DIR is the path of the Docker volume directory to persist XDG configurations and caches
+# across container restarts. If it is not set, use the default path inside the container, which
+# does not persist across restarts.
+ARG XDG_DIR=${OVERLAYS_DIR}/xdg
+ENV XDG_CONFIG_HOME=${XDG_DIR}/config
+ENV XDG_CACHE_HOME=${XDG_DIR}/cache
+ENV XDG_DATA_HOME=${XDG_DIR}/data
 
 ENV CLAUDE_CODE_EFFORT_LEVEL="high"
 ENV IS_SANDBOX="1"
@@ -91,18 +100,27 @@ ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD="1"
 WORKDIR /var/tmp/scripts
 # Install additional packages for local development environment.
 COPY tools/bootstrap/install_dev_tools.sh .
-RUN chmod +x ./*.sh \
-    && ./install_dev_tools.sh \
-    && rm -rf /var/tmp/scripts
+RUN chmod +x ./*.sh && \
+    mkdir -p \
+    "${GIT_CREDENTIALS_DIR}" \
+    "${XDG_CONFIG_HOME}" \
+    "${XDG_CACHE_HOME}" \
+    "${XDG_DATA_HOME}" && \
+    ./install_dev_tools.sh && \
+    rm -rf /var/tmp/scripts
 
-WORKDIR ${WORKSPACE_ROOT}
+WORKDIR /opt/devcontainer
 
 # Final runtime image to deploy the compiled binary.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime
 
 ENV BEAR_LOG_DIR=/app/logs
 
-WORKDIR /app
-COPY --from=builder /app/bear-go /app/bear-go
+ARG APP_UID=1001
+ARG APP_GID=1001
 
+WORKDIR /app
+COPY --from=builder --chown=${APP_UID}:${APP_GID} /app/bear-go /app/bear-go
+
+USER ${APP_UID}:${APP_GID}
 ENTRYPOINT ["/app/bear-go"]

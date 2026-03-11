@@ -1,0 +1,4 @@
+# You MUST NOT ignore the .env file because it may contain environment variables that are necessary
+# for the development environment to function properly. Ignoring it would prevent it from being
+# included in the container, which could lead to issues with the development environment.
+!.env
