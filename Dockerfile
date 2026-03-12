@@ -34,7 +34,8 @@ COPY tools/bootstrap/install_golang_extra_packages.sh .
 RUN chmod +x ./*.sh && \
     ./install_base_packages.sh && \
     ./install_golang.sh --version 1.26.0 && \
-    ./install_golang_extra_packages.sh
+    ./install_golang_extra_packages.sh && \
+    rm -rf /var/tmp/scripts
 
 ENV LANG=en_US.UTF-8
 ENV LC_CTYPE=ko_KR.UTF-8
@@ -115,7 +116,12 @@ RUN chmod +x ./*.sh && \
     ./install_dev_tools.sh && \
     rm -rf /var/tmp/scripts
 
+COPY tools/bootstrap/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /opt/devcontainer
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Final runtime image to deploy the compiled binary.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime

@@ -29,8 +29,5 @@
             "userGid": "1001",
             "upgradePackages": false
         }
-    },
-    "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${containerWorkspaceFolder}\"",
-    "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
-    "postStartCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_start_script.sh \"${containerWorkspaceFolder}\""
+    }
 }

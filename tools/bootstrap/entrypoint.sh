@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#
-# 이 스크립트는 postStartCommand 액션이 발생할 때 실행된다. postStartCommand 액션은 컨테이너가
-# 실행될 때마다 매번 발생한다.
-#
-# 따라서 이 스크립트에서는 컨테이너가 매번 실행될 때마다 미리 실행주어야 하는 작업들을 실행하면 된다.
-#
+# This script is the entrypoint for the development container. It is executed every time the
+# container starts, so it is alternative to using the `postCreateCommand` or `postStartCommand`
+# hooks in `devcontainer.json` that reveal annoying terminal output.
 
-WORKSPACE_DIR="${1:-}"
-if [[ -z "$WORKSPACE_DIR" ]]; then
-  echo "Workspace path argument missing" >&2
-  exit 1
-fi
+# REMOTE_USER MUST be the same as `remoteUser` and `username` of common-utils feature specified in
+# `devcontainer.json`.
+REMOTE_USER="devuser"
+
+# Set ownership of the named volumes to the non-root user to ensure they are writable.
+sudo chown -R "$REMOTE_USER:$REMOTE_USER" \
+  "$GOPATH" \
+  "$GOROOT" \
+  "$GIT_CREDENTIALS_DIR" \
+  "$XDG_CONFIG_HOME" \
+  "$XDG_CACHE_HOME" \
+  "$XDG_DATA_HOME" \
+  "$BEAR_LOG_DIR"
 
 git config --global credential.helper "store --file $GIT_CREDENTIALS_DIR/git-credentials"
 git config --global rerere.enabled true
@@ -34,3 +39,7 @@ git config --global gc.reflogExpireUnreachable 180.days
 git config --global push.autoSetupRemote true
 git config --global pull.ff only
 git config --global core.hooksPath .githooks
+
+# Execute the command passed as arguments to the entrypoint. This allows the container to run the
+# default command specified in the Dockerfile or any command from the devcontainer. 
+exec "$@"
