@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 #
 # 이 스크립트는 postStartCommand 액션이 발생할 때 실행된다. postStartCommand 액션은 컨테이너가

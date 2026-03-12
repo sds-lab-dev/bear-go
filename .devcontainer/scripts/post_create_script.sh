@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 #
 # 이 스크립트는 postCreateCommand 액션이 발생할 때 실행된다. postCreateCommand 액션은
