@@ -22,5 +22,5 @@ func (c config) AnthropicAPIKey() string {
 }
 
 func (c config) LogDir() string {
-	return loadEnvironmentVariable(LOG_DIR_ENV_VAR, "/var/log")
+	return loadEnvironmentVariable(LOG_DIR_ENV_VAR, "/tmp/bear_logs")
 }

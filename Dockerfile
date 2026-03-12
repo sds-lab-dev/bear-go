@@ -15,8 +15,10 @@ ARG OVERLAYS_DIR=/var/overlays
 # persist across restarts.
 ARG GOPATH_DIR=${OVERLAYS_DIR}/go
 ENV GOPATH=${GOPATH_DIR}
-ENV GOMODCACHE=${GOPATH}/pkg/mod
-ENV GOCACHE=${GOPATH}/build-cache
+ARG GOMODCACHE_DIR=${GOPATH_DIR}/pkg/mod
+ENV GOMODCACHE=${GOMODCACHE_DIR}
+ARG GOCACHE_DIR=${GOPATH_DIR}/build-cache
+ENV GOCACHE=${GOCACHE_DIR}
 ENV GOENV=${GOPATH}/env
 # GOROOT_DIR MUST NOT be in the persistent volume because it may cause unintended behavior due to 
 # stale toolchain files.
@@ -64,10 +66,14 @@ ENV CI_GIT_SHA=${CI_GIT_SHA}
 # Validate the source code by running tests and linters. This step is crucial to ensure that
 # the code is in a good state before building the binary. If any of the tests or linters fail,
 # the build will be stopped immediately, preventing the creation of a potentially broken binary.
-RUN make fmt-check staticcheck test
+RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
+    --mount=type=cache,id=bear-go-build-cache,target=${GOCACHE} \
+    make fmt-check staticcheck test
 
 # Build the application binary and move it to /app directory for the runtime image.
-RUN make build && \
+RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
+    --mount=type=cache,id=bear-go-build-cache,target=${GOCACHE} \
+    make build && \
     mkdir -p /app && \
     mv bear-go /app
 
