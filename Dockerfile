@@ -97,6 +97,8 @@ ENV XDG_CONFIG_HOME=${XDG_DIR}/config
 ENV XDG_CACHE_HOME=${XDG_DIR}/cache
 ENV XDG_DATA_HOME=${XDG_DIR}/data
 
+ARG CLAUDE_CONFIG_DIR=${OVERLAYS_DIR}/claude
+ENV CLAUDE_CONFIG_DIR=${CLAUDE_CONFIG_DIR}
 ENV CLAUDE_CODE_EFFORT_LEVEL="high"
 ENV IS_SANDBOX="1"
 ENV ENABLE_LSP_TOOL="1"
@@ -104,15 +106,24 @@ ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"
 ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY="1"
 ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD="1"
 
+ARG CODEX_HOME=${OVERLAYS_DIR}/codex
+ENV CODEX_HOME=${CODEX_HOME}
+
+ARG GEMINI_CLI_HOME=${OVERLAYS_DIR}/gemini
+ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
+
 WORKDIR /var/tmp/scripts
 # Install additional packages for local development environment.
 COPY tools/bootstrap/install_dev_tools.sh .
 RUN chmod +x ./*.sh && \
     mkdir -p \
-    "${GIT_CREDENTIALS_DIR}" \
-    "${XDG_CONFIG_HOME}" \
-    "${XDG_CACHE_HOME}" \
-    "${XDG_DATA_HOME}" && \
+        "${GIT_CREDENTIALS_DIR}" \
+        "${XDG_CONFIG_HOME}" \
+        "${XDG_CACHE_HOME}" \
+        "${XDG_DATA_HOME}" \
+        "${CLAUDE_CONFIG_DIR}" \
+        "${CODEX_HOME}" \
+        "${GEMINI_CLI_HOME}" && \
     ./install_dev_tools.sh && \
     rm -rf /var/tmp/scripts
 

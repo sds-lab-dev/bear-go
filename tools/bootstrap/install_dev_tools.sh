@@ -4,4 +4,6 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 export TZ=Asia/Seoul
 
-# Install tools required to make your development environment work.
+npm install -g @anthropic-ai/claude-code
+npm install -g @openai/codex
+npm install -g @google/gemini-cli

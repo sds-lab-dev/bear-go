@@ -15,6 +15,9 @@ services:
       target: dev
       pull: true
       args:
+        CLAUDE_CONFIG_DIR: ${CLAUDE_CONFIG_DIR}
+        CODEX_HOME: ${CODEX_HOME}
+        GEMINI_CLI_HOME: ${GEMINI_CLI_HOME}
         GIT_CREDENTIALS_DIR: ${GIT_CREDENTIALS_DIR}
         XDG_DIR: ${XDG_DIR}
         GOPATH_DIR: ${GOPATH_DIR}
@@ -23,6 +26,9 @@ services:
     volumes:
       # The workspace MUST be mounted to the same as `workspaceFolder` in `devcontainer.json`.
       - ..:/workspace:consistent
+      - bear-go-claude-volume:${CLAUDE_CONFIG_DIR}
+      - bear-go-codex-volume:${CODEX_HOME}
+      - bear-go-gemini-volume:${GEMINI_CLI_HOME}
       - bear-go-git-credentials-volume:${GIT_CREDENTIALS_DIR}
       - bear-go-xdg-volume:${XDG_DIR}
       - bear-go-gopath-volume:${GOPATH_DIR}
@@ -34,6 +40,9 @@ services:
       - seccomp:unconfined
 
 volumes:
+  bear-go-claude-volume:
+  bear-go-codex-volume:
+  bear-go-gemini-volume:
   bear-go-git-credentials-volume:
   bear-go-xdg-volume:
   bear-go-gopath-volume:

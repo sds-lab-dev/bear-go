@@ -48,7 +48,10 @@ set_directory_permissions() {
     "$XDG_CONFIG_HOME" \
     "$XDG_CACHE_HOME" \
     "$XDG_DATA_HOME" \
-    "$BEAR_LOG_DIR"
+    "$BEAR_LOG_DIR" \
+    "$CLAUDE_CONFIG_DIR" \
+    "$CODEX_HOME" \
+    "$GEMINI_CLI_HOME"
 }
 
 main() {
