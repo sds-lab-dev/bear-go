@@ -122,6 +122,7 @@ RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh
 WORKDIR /opt/devcontainer
 
 ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
+CMD [ "sleep", "infinity" ]
 
 # Final runtime image to deploy the compiled binary.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime

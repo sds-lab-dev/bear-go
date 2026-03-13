@@ -4,7 +4,7 @@
     "service": "dev",
     "remoteUser": "devuser",
     "workspaceFolder": "/workspace",
-    "overrideCommand": true,
+    "overrideCommand": false,
     "shutdownAction": "stopCompose",
     "customizations": {
         "vscode": {

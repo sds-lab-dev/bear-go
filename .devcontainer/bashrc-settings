@@ -1,3 +1,9 @@
+# NOTE:
+# 
+# This file is sourced with non-root permissions. If you need to run some logic with root
+# permissions, you can add it to `tools/bootstrap/devcontainer_entrypoint.sh` that is executed as
+# the entrypoint of the container whenever it starts.
+
 git_branch() {
   # Check Git repository or not
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
@@ -44,35 +50,49 @@ git_branch() {
   [ -n "$flags" ] && echo "($branch) (${flags_joined})" || echo "($branch)"
 }
 
-# Colors
-reset='\[\e[0m\]'
-cyan='\[\e[36m\]'
-purple='\[\e[35m\]'
+set_shell_prompt() {
+  # Colors
+  reset='\[\e[0m\]'
+  cyan='\[\e[36m\]'
+  purple='\[\e[35m\]'
 
-# PS1: $WORKING_DIRECTORY: ($BRANCH_NAME) ($STATUS_FLAGS)
-PS1="\w: ${purple}\$(git_branch)${reset}\n\\$ "
+  # PS1: $WORKING_DIRECTORY: ($BRANCH_NAME) ($STATUS_FLAGS)
+  PS1="\w: ${purple}\$(git_branch)${reset}\n\\$ "
+}
 
-export PATH=$PATH:$HOME/.local/bin
-export VIMINIT='set encoding=utf-8 | set mouse='
+set_environment_variables() {
+  export PATH=$PATH:$HOME/.local/bin
+  export VIMINIT='set encoding=utf-8 | set mouse='
 
-if [ -f "${WORKSPACE_ROOT}/.env" ]; then
-  set -a
-  . "${WORKSPACE_ROOT}/.env"
-  set +a
-fi
+  if [ -f "${WORKSPACE_ROOT}/.env" ]; then
+    set -a
+    . "${WORKSPACE_ROOT}/.env"
+    set +a
+  fi
+}
 
-if [[ $- == *i* ]]; then
-  # 위/아래 화살표를 "현재 입력된 내용" 기준으로 히스토리 검색 이동으로 바꿉니다.
-  bind '"\e[A": history-search-backward'
-  bind '"\e[B": history-search-forward'
+bind_keys() {
+  if [[ $- == *i* ]]; then
+    # 위/아래 화살표를 "현재 입력된 내용" 기준으로 히스토리 검색 이동으로 바꿉니다.
+    bind '"\e[A": history-search-backward'
+    bind '"\e[B": history-search-forward'
 
-  # HOME/END 버튼
-  bind '"\e[1~": beginning-of-line'
-  bind '"\e[4~": end-of-line'
-  bind '"\e[H":  beginning-of-line'
-  bind '"\e[F":  end-of-line'
-  bind '"\eOH":  beginning-of-line'
-  bind '"\eOF":  end-of-line'
-  bind '"\e[7~": beginning-of-line'
-  bind '"\e[8~": end-of-line'
-fi
+    # HOME/END 버튼
+    bind '"\e[1~": beginning-of-line'
+    bind '"\e[4~": end-of-line'
+    bind '"\e[H":  beginning-of-line'
+    bind '"\e[F":  end-of-line'
+    bind '"\eOH":  beginning-of-line'
+    bind '"\eOF":  end-of-line'
+    bind '"\e[7~": beginning-of-line'
+    bind '"\e[8~": end-of-line'
+  fi
+}
+
+main() {
+  set_shell_prompt
+  set_environment_variables
+  bind_keys
+}
+
+main "$@"
