@@ -116,12 +116,12 @@ RUN chmod +x ./*.sh && \
     ./install_dev_tools.sh && \
     rm -rf /var/tmp/scripts
 
-COPY tools/bootstrap/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
+RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh
 
 WORKDIR /opt/devcontainer
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
 
 # Final runtime image to deploy the compiled binary.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime
