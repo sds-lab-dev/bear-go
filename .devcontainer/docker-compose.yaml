@@ -21,6 +21,7 @@ services:
         GIT_CREDENTIALS_DIR: ${GIT_CREDENTIALS_DIR}
         XDG_DIR: ${XDG_DIR}
         GOPATH_DIR: ${GOPATH_DIR}
+        NPM_CONFIG_CACHE_DIR: ${NPM_CONFIG_CACHE_DIR}
     environment:
       BEAR_LOG_DIR: ${BEAR_LOG_DIR}
     volumes:
@@ -33,6 +34,7 @@ services:
       - bear-go-xdg-volume:${XDG_DIR}
       - bear-go-gopath-volume:${GOPATH_DIR}
       - bear-go-logs-volume:${BEAR_LOG_DIR}
+      - bear-go-npm-volume:${NPM_CONFIG_CACHE_DIR}
     command: /bin/sh -c "while sleep 1000; do :; done"
     cap_add:
       - SYS_PTRACE
@@ -47,3 +49,4 @@ volumes:
   bear-go-xdg-volume:
   bear-go-gopath-volume:
   bear-go-logs-volume:
+  bear-go-npm-volume:

@@ -28,5 +28,8 @@
             "userGid": "1001",
             "upgradePackages": false
         }
+    },
+    "remoteEnv": {
+        "DEVCONTAINER_WORKSPACE": "${containerWorkspaceFolder}"
     }
 }

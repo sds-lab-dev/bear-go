@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # This script is the entrypoint for the development container. It is executed every time the
-# container starts.
+# container starts with root permissions.
 # 
 # So, it can be used as an alternative to using the `postCreateCommand` or `postStartCommand`
 # hooks in `devcontainer.json` that are only executed once after the container is newly created or
-# started (only from stopped containers), respectively, with root permissions. 
+# started (only from stopped containers), respectively. 
 #
 # If you need to run some logic whenever the container starts regardless of its previous state,
 # you can add it to `.devcontainer/bashrc-settings`. However, this file is sourced with non-root
@@ -51,7 +51,8 @@ set_directory_permissions() {
     "$BEAR_LOG_DIR" \
     "$CLAUDE_CONFIG_DIR" \
     "$CODEX_HOME" \
-    "$GEMINI_CLI_HOME"
+    "$GEMINI_CLI_HOME" \
+    "$npm_config_cache"
 }
 
 main() {

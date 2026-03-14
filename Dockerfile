@@ -25,6 +25,10 @@ ENV GOENV=${GOPATH}/env
 ARG GOROOT_DIR=${OVERLAYS_DIR}/go-root
 ENV GOROOT=${GOROOT_DIR}
 
+ARG NPM_CONFIG_CACHE_DIR=${OVERLAYS_DIR}/npm
+# npm_config_cache MUST be lowercase environment variable.
+ENV npm_config_cache=${NPM_CONFIG_CACHE_DIR}
+
 ENV PATH=${GOPATH}/bin:${GOROOT}/bin:/usr/local/bin:${PATH}
 
 WORKDIR /var/tmp/scripts
@@ -105,6 +109,7 @@ ENV ENABLE_LSP_TOOL="1"
 ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"
 ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY="1"
 ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD="1"
+ENV DISABLE_AUTOUPDATER="1"
 
 ARG CODEX_HOME=${OVERLAYS_DIR}/codex
 ENV CODEX_HOME=${CODEX_HOME}
@@ -114,17 +119,17 @@ ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
 WORKDIR /var/tmp/scripts
 # Install additional packages for local development environment.
-COPY tools/bootstrap/install_dev_tools.sh .
+COPY tools/bootstrap/install_ai_assistants.sh .
 RUN chmod +x ./*.sh && \
     mkdir -p \
-        "${GIT_CREDENTIALS_DIR}" \
-        "${XDG_CONFIG_HOME}" \
-        "${XDG_CACHE_HOME}" \
-        "${XDG_DATA_HOME}" \
-        "${CLAUDE_CONFIG_DIR}" \
-        "${CODEX_HOME}" \
-        "${GEMINI_CLI_HOME}" && \
-    ./install_dev_tools.sh && \
+    "${GIT_CREDENTIALS_DIR}" \
+    "${XDG_CONFIG_HOME}" \
+    "${XDG_CACHE_HOME}" \
+    "${XDG_DATA_HOME}" \
+    "${CLAUDE_CONFIG_DIR}" \
+    "${CODEX_HOME}" \
+    "${GEMINI_CLI_HOME}" && \
+    ./install_ai_assistants.sh && \
     rm -rf /var/tmp/scripts
 
 COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh

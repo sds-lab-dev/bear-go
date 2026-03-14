@@ -64,9 +64,9 @@ set_environment_variables() {
   export PATH=$PATH:$HOME/.local/bin
   export VIMINIT='set encoding=utf-8 | set mouse='
 
-  if [ -f "${WORKSPACE_ROOT}/.env" ]; then
+  if [ -f "${DEVCONTAINER_WORKSPACE}/.env" ]; then
     set -a
-    . "${WORKSPACE_ROOT}/.env"
+    . "${DEVCONTAINER_WORKSPACE}/.env"
     set +a
   fi
 }
@@ -89,10 +89,17 @@ bind_keys() {
   fi
 }
 
+set_alias() {
+  alias claude='npx --yes @anthropic-ai/claude-code'
+  alias codex='npx --yes @openai/codex'
+  alias gemini='npx --yes @google/gemini-cli'
+}
+
 main() {
   set_shell_prompt
   set_environment_variables
   bind_keys
+  set_alias
 }
 
 main "$@"
