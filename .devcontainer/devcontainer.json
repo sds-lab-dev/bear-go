@@ -2,6 +2,7 @@
     "name": "Bear AI developer in Go for local development",
     "dockerComposeFile": "docker-compose.yaml",
     "service": "dev",
+    "containerUser": "devuser",
     "remoteUser": "devuser",
     "workspaceFolder": "/workspace",
     "overrideCommand": false,
@@ -16,17 +17,9 @@
             },
             "extensions": [
                 "golang.go",
-                "github.copilot-chat"
+                "github.copilot-chat",
+                "anthropic.claude-code"
             ]
-        }
-    },
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "installZsh": false,
-            "username": "devuser",
-            "userUid": "1001",
-            "userGid": "1001",
-            "upgradePackages": false
         }
     },
     "remoteEnv": {

@@ -41,6 +41,7 @@ apt-get \
     jq \
     bc \
     ripgrep \
+    sudo \
     procps && \
 rm -rf /var/lib/apt/lists/*
 

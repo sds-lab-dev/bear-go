@@ -25,31 +25,22 @@ ENV GOENV=${GOPATH}/env
 ARG GOROOT_DIR=${OVERLAYS_DIR}/go-root
 ENV GOROOT=${GOROOT_DIR}
 
-ARG NPM_CONFIG_CACHE_DIR=${OVERLAYS_DIR}/npm
-# npm_config_cache MUST be lowercase environment variable.
-ENV npm_config_cache=${NPM_CONFIG_CACHE_DIR}
-
 ENV PATH=${GOPATH}/bin:${GOROOT}/bin:/usr/local/bin:${PATH}
 
-WORKDIR /var/tmp/scripts
+WORKDIR /tmp
 COPY tools/bootstrap/install_base_packages.sh .
 COPY tools/bootstrap/install_golang.sh .
 COPY tools/bootstrap/install_golang_extra_packages.sh .
 RUN chmod +x ./*.sh && \
     ./install_base_packages.sh && \
     ./install_golang.sh --version 1.26.0 && \
-    ./install_golang_extra_packages.sh && \
-    rm -rf /var/tmp/scripts
+    ./install_golang_extra_packages.sh
 
 ENV LANG=en_US.UTF-8
 ENV LC_CTYPE=ko_KR.UTF-8
 ENV LESSCHARSET=utf-8
 
-COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
-RUN cat /tmp/bashrc-settings >> /etc/bash.bashrc && \
-    printf "\n" >> /etc/bash.bashrc && \
-    rm /tmp/bashrc-settings && \
-    localedef -f UTF-8 -i ko_KR ko_KR.UTF-8 && \
+RUN localedef -f UTF-8 -i ko_KR ko_KR.UTF-8 && \
     localedef -f UTF-8 -i en_US en_US.UTF-8
 
 WORKDIR /opt/devcontainer
@@ -87,6 +78,10 @@ RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
 # development are installed conditionally.
 FROM toolchain AS dev
 
+ARG USERNAME=devuser
+ARG USER_UID=1001
+ARG USER_GID=1001
+
 # GIT_CREDENTIALS_DIR is the path of the Docker volume directory to persist Git credentials across
 # container restarts. If it is not set, use the default path inside the container, which does not
 # persist across restarts.
@@ -117,25 +112,40 @@ ENV CODEX_HOME=${CODEX_HOME}
 ARG GEMINI_CLI_HOME=${OVERLAYS_DIR}/gemini
 ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
-WORKDIR /var/tmp/scripts
-# Install additional packages for local development environment.
-COPY tools/bootstrap/install_ai_assistants.sh .
-RUN chmod +x ./*.sh && \
-    mkdir -p \
-    "${GIT_CREDENTIALS_DIR}" \
-    "${XDG_CONFIG_HOME}" \
-    "${XDG_CACHE_HOME}" \
-    "${XDG_DATA_HOME}" \
-    "${CLAUDE_CONFIG_DIR}" \
-    "${CODEX_HOME}" \
-    "${GEMINI_CLI_HOME}" && \
-    ./install_ai_assistants.sh && \
-    rm -rf /var/tmp/scripts
+ENV NPM_CONFIG_PREFIX=/home/${USERNAME}/.npm-global
+ENV PATH=${NPM_CONFIG_PREFIX}/bin:${PATH}
 
 COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
-RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh
+COPY tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
+RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh /tmp/install_ai_assistants.sh && \
+    groupadd --gid ${USER_GID} ${USERNAME} && \
+    useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} && \
+    echo "${USERNAME} ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME} && \
+    set -eu; \
+    for d in \
+    "$GOPATH" \
+    "$GOROOT" \
+    "$GIT_CREDENTIALS_DIR" \
+    "$XDG_CONFIG_HOME" \
+    "$XDG_CACHE_HOME" \
+    "$XDG_DATA_HOME" \
+    "$CLAUDE_CONFIG_DIR" \
+    "$CODEX_HOME" \
+    "$GEMINI_CLI_HOME" \
+    "$NPM_CONFIG_PREFIX/lib/node_modules" \
+    "$NPM_CONFIG_PREFIX/bin" \
+    ; do \
+    mkdir -p "$d"; \
+    chown -R "$USERNAME:$USERNAME" "$d"; \
+    done
 
-WORKDIR /opt/devcontainer
+USER ${USERNAME}
+COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
+RUN { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /home/${USERNAME}/.bashrc && \
+    /tmp/install_ai_assistants.sh
+
+WORKDIR /home/${USERNAME}
 
 ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
 CMD [ "sleep", "infinity" ]
