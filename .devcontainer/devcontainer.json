@@ -18,7 +18,9 @@
             "extensions": [
                 "golang.go",
                 "github.copilot-chat",
-                "anthropic.claude-code"
+                "anthropic.claude-code",
+                "google.gemini-cli-vscode-ide-companion",
+                "openai.chatgpt"
             ]
         }
     },
