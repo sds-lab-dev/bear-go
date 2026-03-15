@@ -23,7 +23,7 @@
                     ]
                 },
                 "env": {
-                    "BUILD_FLAGS": "-C ${workspaceFolder} -v"
+                    "BUILD_FLAGS": "-C ${workspaceFolder}"
                 }
             }
         },
@@ -49,7 +49,7 @@
                     ]
                 },
                 "env": {
-                    "RUN_FLAGS": "-C ${workspaceFolder} -v"
+                    "RUN_FLAGS": "-C ${workspaceFolder}"
                 }
             },
             "runOptions": {
