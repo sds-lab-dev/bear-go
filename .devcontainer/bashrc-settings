@@ -1,8 +1,9 @@
-# NOTE:
-# 
-# This file is sourced with non-root permissions. If you need to run some logic with root
-# permissions, you can add it to `tools/bootstrap/devcontainer_entrypoint.sh` that is executed as
-# the entrypoint of the container whenever it starts.
+# This file is sourced with non-root permissions whenever the devcontainer project starts
+# regardless of the container is already started or not.
+#
+# If you need to run some logic only once after the container is newly created or started, you can
+# add it to `tools/bootstrap/devcontainer_entrypoint.sh` that is executed as the entrypoint of the
+# container whenever it starts.
 
 git_branch() {
   # Check Git repository or not
@@ -63,8 +64,12 @@ set_shell_prompt() {
 set_environment_variables() {
   export PATH=$PATH:$HOME/.local/bin
   export VIMINIT='set encoding=utf-8 | set mouse='
+}
 
+load_environment_variables() {
   if [ -f "${DEVCONTAINER_WORKSPACE}/.env" ]; then
+    echo "Loading environment variables from ${DEVCONTAINER_WORKSPACE}/.env"
+
     set -a
     . "${DEVCONTAINER_WORKSPACE}/.env"
     set +a
@@ -97,6 +102,7 @@ set_alias() {
 
 main() {
   set_shell_prompt
+  load_environment_variables
   set_environment_variables
   bind_keys
   set_alias

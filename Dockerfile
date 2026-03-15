@@ -111,7 +111,13 @@ ENV PATH=${NPM_CONFIG_PREFIX}/bin:${PATH}
 
 COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
 COPY tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
-RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh /tmp/install_ai_assistants.sh && \
+COPY tools/bootstrap/setup_devcontainer.sh /tmp/setup_devcontainer.sh
+# This RUN step is executed as root, so it can perform privileged operations such as creating a
+# user and setting permissions.
+RUN chmod +x \
+    /usr/local/bin/devcontainer_entrypoint.sh \
+    /tmp/install_ai_assistants.sh \
+    /tmp/setup_devcontainer.sh && \
     groupadd --gid ${USER_GID} ${USERNAME} && \
     useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} && \
     echo "${USERNAME} ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
@@ -131,8 +137,12 @@ RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh /tmp/install_ai_assistant
     ; do \
     mkdir -p "$d"; \
     chown -R "$USERNAME:$USERNAME" "$d"; \
-    done
+    done && \
+    /tmp/setup_devcontainer.sh
 
+# This USER directive switches the user to a non-root user for the subsequent steps. This container
+# will be executed with non-root permissions in local development for better security and to avoid
+# potential permission issues with files created by root.
 USER ${USERNAME}
 COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
 RUN { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /home/${USERNAME}/.bashrc && \
