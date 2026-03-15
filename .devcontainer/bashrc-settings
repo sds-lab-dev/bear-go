@@ -1,9 +1,9 @@
-# This file is sourced with non-root permissions whenever the devcontainer project starts
-# regardless of the container is already started or not.
+# This file is sourced whenever the devcontainer project starts regardless of the container is
+# already started or not.
 #
-# If you need to run some logic only once after the container is newly created or started, you can
-# add it to `tools/bootstrap/devcontainer_entrypoint.sh` that is executed as the entrypoint of the
-# container whenever it starts.
+# If you need to run some logic only once after the container is newly created or started from
+# stopped container, you can add it to `tools/bootstrap/devcontainer_entrypoint.sh` that is
+# executed as the entrypoint of the container.
 
 git_branch() {
   # Check Git repository or not

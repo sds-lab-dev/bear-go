@@ -1,6 +1,16 @@
-# Toolchain image to build Go.
+# Toolchain image to build Go. It uses Debian 13 as the base image, and it should be matched with
+# the base image of the final runtime image to avoid potential compatibility issues with compiled
+# artifacts.
 FROM debian:13 AS toolchain
 
+# This image is used as the base for other stages and have root permissions to install necessary
+# packages and set up the environment. It is not intended to be used directly for running the
+# application, so it does not have a non-root user or entrypoint defined. The main purpose of this
+# image is to provide a consistent and reproducible environment for building the Go application,
+# which can be used in both local development and CI/CD pipelines.
+USER root
+
+# This image uses bash as the default shell.
 SHELL ["/bin/bash", "-c"]
 
 ENV TZ=Asia/Seoul
@@ -45,7 +55,10 @@ RUN localedef -f UTF-8 -i ko_KR ko_KR.UTF-8 && \
 
 WORKDIR /opt/devcontainer
 
-# Builder image to pass a compiled binary to the final runtime image.
+# Builder image to pass a compiled binary to the final runtime image. It has root permissions based
+# on the toolchain image, but it is not intended to be used directly for running the application.
+# It is only used as an intermediate stage to build the application binary and copy it to the final
+# runtime image.
 FROM toolchain AS builder
 
 COPY . .
@@ -73,14 +86,8 @@ RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
     mkdir -p /app && \
     mv bear-go /app
 
-# Devcontainer image for Go development. This image may be used in both local 
-# development and GitHub Actions, so additional packages for local 
-# development are installed conditionally.
+# Devcontainer image for local Go development. It has root permissions based on the toolchain image.
 FROM toolchain AS dev
-
-ARG USERNAME=devuser
-ARG USER_UID=1001
-ARG USER_GID=1001
 
 # XDG_DIR is the path of the Docker volume directory to persist XDG configurations and caches
 # across container restarts. If it is not set, use the default path inside the container, which
@@ -98,7 +105,6 @@ ENV ENABLE_LSP_TOOL="1"
 ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="1"
 ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY="1"
 ENV CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD="1"
-ENV DISABLE_AUTOUPDATER="1"
 
 ARG CODEX_HOME=${OVERLAYS_DIR}/codex
 ENV CODEX_HOME=${CODEX_HOME}
@@ -106,58 +112,33 @@ ENV CODEX_HOME=${CODEX_HOME}
 ARG GEMINI_CLI_HOME=${OVERLAYS_DIR}/gemini
 ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
-ENV NPM_CONFIG_PREFIX=/home/${USERNAME}/.npm-global
-ENV PATH=${NPM_CONFIG_PREFIX}/bin:${PATH}
-
 COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
 COPY tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
-COPY tools/bootstrap/setup_devcontainer.sh /tmp/setup_devcontainer.sh
-# This RUN step is executed as root, so it can perform privileged operations such as creating a
-# user and setting permissions.
+COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
 RUN chmod +x \
     /usr/local/bin/devcontainer_entrypoint.sh \
-    /tmp/install_ai_assistants.sh \
-    /tmp/setup_devcontainer.sh && \
-    groupadd --gid ${USER_GID} ${USERNAME} && \
-    useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} && \
-    echo "${USERNAME} ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
-    chmod 0440 /etc/sudoers.d/${USERNAME} && \
-    set -eu; \
-    for d in \
-    "$GOPATH" \
-    "$GOROOT" \
+    /tmp/install_ai_assistants.sh && \
+    mkdir -p \
     "$XDG_CONFIG_HOME" \
     "$XDG_CACHE_HOME" \
     "$XDG_DATA_HOME" \
     "$CLAUDE_CONFIG_DIR" \
     "$CODEX_HOME" \
-    "$GEMINI_CLI_HOME" \
-    "$NPM_CONFIG_PREFIX/lib/node_modules" \
-    "$NPM_CONFIG_PREFIX/bin" \
-    ; do \
-    mkdir -p "$d"; \
-    chown -R "$USERNAME:$USERNAME" "$d"; \
-    done && \
-    /tmp/setup_devcontainer.sh
-
-# This USER directive switches the user to a non-root user for the subsequent steps. This container
-# will be executed with non-root permissions in local development for better security and to avoid
-# potential permission issues with files created by root.
-USER ${USERNAME}
-COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
-RUN { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /home/${USERNAME}/.bashrc && \
+    "$GEMINI_CLI_HOME" && \
+    { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /root/.bashrc && \
     /tmp/install_ai_assistants.sh
-
-WORKDIR /home/${USERNAME}
 
 ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
 CMD [ "sleep", "infinity" ]
 
-# Final runtime image to deploy the compiled binary.
+# Final runtime image to deploy the compiled binary. It uses Debian 13 as the base image, and it
+# should be matched with the base image of the toolchain image to avoid potential compatibility
+# issues with compiled artifacts.
 FROM dhi.io/static:20250419-glibc-debian13 AS runtime
 
 ENV BEAR_LOG_DIR=/app/logs
 
+# This image has non-root permissions to run the application securely.
 ARG APP_UID=1001
 ARG APP_GID=1001
 
