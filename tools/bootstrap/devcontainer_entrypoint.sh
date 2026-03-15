@@ -13,7 +13,6 @@ set -euo pipefail
 # permissions.
 
 set_git_configs() {
-  git config --global credential.helper "store --file $GIT_CREDENTIALS_DIR/git-credentials"
   git config --global rerere.enabled true
   git config --global rerere.autoupdate true
   git config --global alias.graph "log --graph --oneline"

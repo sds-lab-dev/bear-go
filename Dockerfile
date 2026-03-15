@@ -82,12 +82,6 @@ ARG USERNAME=devuser
 ARG USER_UID=1001
 ARG USER_GID=1001
 
-# GIT_CREDENTIALS_DIR is the path of the Docker volume directory to persist Git credentials across
-# container restarts. If it is not set, use the default path inside the container, which does not
-# persist across restarts.
-ARG GIT_CREDENTIALS_DIR=${OVERLAYS_DIR}/git-credentials
-ENV GIT_CREDENTIALS_DIR=${GIT_CREDENTIALS_DIR}
-
 # XDG_DIR is the path of the Docker volume directory to persist XDG configurations and caches
 # across container restarts. If it is not set, use the default path inside the container, which
 # does not persist across restarts.
@@ -126,7 +120,6 @@ RUN chmod +x /usr/local/bin/devcontainer_entrypoint.sh /tmp/install_ai_assistant
     for d in \
     "$GOPATH" \
     "$GOROOT" \
-    "$GIT_CREDENTIALS_DIR" \
     "$XDG_CONFIG_HOME" \
     "$XDG_CACHE_HOME" \
     "$XDG_DATA_HOME" \

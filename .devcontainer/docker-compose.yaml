@@ -18,7 +18,6 @@ services:
         CLAUDE_CONFIG_DIR: ${CLAUDE_CONFIG_DIR}
         CODEX_HOME: ${CODEX_HOME}
         GEMINI_CLI_HOME: ${GEMINI_CLI_HOME}
-        GIT_CREDENTIALS_DIR: ${GIT_CREDENTIALS_DIR}
         XDG_DIR: ${XDG_DIR}
         GOPATH_DIR: ${GOPATH_DIR}
     environment:
@@ -29,7 +28,6 @@ services:
       - bear-go-claude-volume:${CLAUDE_CONFIG_DIR}
       - bear-go-codex-volume:${CODEX_HOME}
       - bear-go-gemini-volume:${GEMINI_CLI_HOME}
-      - bear-go-git-credentials-volume:${GIT_CREDENTIALS_DIR}
       - bear-go-xdg-volume:${XDG_DIR}
       - bear-go-gopath-volume:${GOPATH_DIR}
       - bear-go-logs-volume:${BEAR_LOG_DIR}
@@ -43,7 +41,6 @@ volumes:
   bear-go-claude-volume:
   bear-go-codex-volume:
   bear-go-gemini-volume:
-  bear-go-git-credentials-volume:
   bear-go-xdg-volume:
   bear-go-gopath-volume:
   bear-go-logs-volume:
