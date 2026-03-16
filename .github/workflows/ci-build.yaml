@@ -101,8 +101,8 @@ jobs:
           target: runtime
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}
-          cache-from: type=gha,scope=bear-go-runtime
-          cache-to: type=gha,scope=bear-go-runtime,mode=max
+          cache-from: type=gha,scope=bear-go-cache
+          cache-to: type=gha,scope=bear-go-cache,mode=max
           build-args: |
             CI_GIT_SHA=${{ github.sha }}
             OVERLAYS_DIR=/var/overlays
@@ -110,4 +110,25 @@ jobs:
             GOMODCACHE_DIR=/var/overlays/go/pkg/mod
             GOCACHE_DIR=/var/overlays/go/build-cache
             GOROOT_DIR=/var/overlays/go-root
-            
+
+      - name: Build CI image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          target: ci
+          push: false
+          load: true
+          tags: ci-image:latest
+          cache-from: type=gha,scope=bear-go-cache
+          cache-to: type=gha,scope=bear-go-cache,mode=max          
+          build-args: |
+            CI_GIT_SHA=${{ github.sha }}
+            OVERLAYS_DIR=/var/overlays
+            GOPATH_DIR=/var/overlays/go
+            GOMODCACHE_DIR=/var/overlays/go/pkg/mod
+            GOCACHE_DIR=/var/overlays/go/build-cache
+            GOROOT_DIR=/var/overlays/go-root            
+
+      - name: Run Tests with Testcontainers
+        run: docker run --privileged --rm ci-image:latest make test
