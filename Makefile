@@ -16,7 +16,13 @@ fmt:
 	go fmt $(FMT_FLAGS) ./...
 
 fmt-check:
-	test -z "$$(gofmt -l .)"
+	@echo "go version: $$(go version)"
+	@files="$$(gofmt -l .)"; \
+	if [ -n "$$files" ]; then \
+		echo "Unformatted Go files:"; \
+		echo "$$files"; \
+		exit 1; \
+	fi
 
 staticcheck:
 	staticcheck $(STATICCHECK_FLAGS) ./...
