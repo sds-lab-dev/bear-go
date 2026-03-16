@@ -38,11 +38,10 @@ ENV GOROOT=${GOROOT_DIR}
 ENV PATH=${GOPATH}/bin:${GOROOT}/bin:/usr/local/bin:${PATH}
 
 WORKDIR /tmp
-COPY tools/bootstrap/install_base_packages.sh .
-COPY tools/bootstrap/install_golang.sh .
-COPY tools/bootstrap/install_golang_extra_packages.sh .
-RUN chmod +x ./*.sh && \
-    ./install_base_packages.sh && \
+COPY --chmod=755 tools/bootstrap/install_base_packages.sh .
+COPY --chmod=755 tools/bootstrap/install_golang.sh .
+COPY --chmod=755 tools/bootstrap/install_golang_extra_packages.sh .
+RUN ./install_base_packages.sh && \
     ./install_golang.sh --version 1.26.0 && \
     ./install_golang_extra_packages.sh
 
@@ -61,6 +60,8 @@ WORKDIR /opt/devcontainer
 # runtime image.
 FROM toolchain AS builder
 
+WORKDIR /opt/devcontainer
+
 COPY . .
 
 # CI_GIT_SHA is the Git SHA of the current commit, and it only exists in GitHub Actions.
@@ -72,22 +73,41 @@ COPY . .
 ARG CI_GIT_SHA
 ENV CI_GIT_SHA=${CI_GIT_SHA}
 
-# Validate the source code by running tests and linters. This step is crucial to ensure that
-# the code is in a good state before building the binary. If any of the tests or linters fail,
-# the build will be stopped immediately, preventing the creation of a potentially broken binary.
-RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
-    --mount=type=cache,id=bear-go-build-cache,target=${GOCACHE} \
-    make fmt-check staticcheck test
-
 # Build the application binary and move it to /app directory for the runtime image.
 RUN --mount=type=cache,id=bear-go-mod-cache,target=${GOMODCACHE} \
     --mount=type=cache,id=bear-go-build-cache,target=${GOCACHE} \
-    make build && \
+    make fmt-check staticcheck build && \
     mkdir -p /app && \
     mv bear-go /app
 
+# CI image to validate the source code by running tests and linters. It is based on the toolchain
+# image, and it has root permissions to run Docker-in-Docker for testing that uses Testcontainers.
+FROM toolchain AS ci
+
+WORKDIR /opt/devcontainer
+
+COPY . .
+COPY --chmod=755 tools/bootstrap/install_docker.sh /tmp/install_docker.sh
+COPY --chmod=755 tools/bootstrap/start_dockerd.sh /usr/local/bin/start_dockerd.sh
+COPY --chmod=755 tools/bootstrap/ci_entrypoint.sh /usr/local/bin/ci_entrypoint.sh
+
+# CI_GIT_SHA is the Git SHA of the current commit, and it only exists in GitHub Actions.
+# It is used to identify the version of the application being built in BUILD_VERSION_SCRIPT.
+# This argument varies across builds, so it should be placed after the validation steps to 
+# maximize cache hits for the previous steps. If it is placed before the validation steps or at
+# the very beginning of the Dockerfile, it will cause all subsequent steps to be re-run on every
+# build, which is extremely inefficient.
+ARG CI_GIT_SHA
+ENV CI_GIT_SHA=${CI_GIT_SHA}
+
+RUN /tmp/install_docker.sh
+
+ENTRYPOINT ["/usr/local/bin/ci_entrypoint.sh"]
+
 # Devcontainer image for local Go development. It has root permissions based on the toolchain image.
 FROM toolchain AS dev
+
+WORKDIR /opt/devcontainer
 
 # XDG_DIR is the path of the Docker volume directory to persist XDG configurations and caches
 # across container restarts. If it is not set, use the default path inside the container, which
@@ -112,21 +132,21 @@ ENV CODEX_HOME=${CODEX_HOME}
 ARG GEMINI_CLI_HOME=${OVERLAYS_DIR}/gemini
 ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
-COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
-COPY tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
+COPY --chmod=755 tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
+COPY --chmod=755 tools/bootstrap/start_dockerd.sh /usr/local/bin/start_dockerd.sh
+COPY --chmod=755 tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
+COPY --chmod=755 tools/bootstrap/install_docker.sh /tmp/install_docker.sh
 COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
-RUN chmod +x \
-    /usr/local/bin/devcontainer_entrypoint.sh \
-    /tmp/install_ai_assistants.sh && \
-    mkdir -p \
-    "$XDG_CONFIG_HOME" \
-    "$XDG_CACHE_HOME" \
-    "$XDG_DATA_HOME" \
-    "$CLAUDE_CONFIG_DIR" \
-    "$CODEX_HOME" \
-    "$GEMINI_CLI_HOME" && \
+RUN mkdir -p \
+        "$XDG_CONFIG_HOME" \
+        "$XDG_CACHE_HOME" \
+        "$XDG_DATA_HOME" \
+        "$CLAUDE_CONFIG_DIR" \
+        "$CODEX_HOME" \
+        "$GEMINI_CLI_HOME" && \
     { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /root/.bashrc && \
-    /tmp/install_ai_assistants.sh
+    /tmp/install_ai_assistants.sh && \
+    /tmp/install_docker.sh
 
 ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
 CMD [ "sleep", "infinity" ]

@@ -32,6 +32,9 @@ services:
       - bear-go-gopath-volume:${GOPATH_DIR}
       - bear-go-logs-volume:${BEAR_LOG_DIR}
     command: /bin/sh -c "while sleep 1000; do :; done"
+    # Docker-in-Docker is required to run the `dev` container in privileged mode to allow it to run
+    # nested Docker commands in the container.
+    privileged: true
     cap_add:
       - SYS_PTRACE
     security_opt:
