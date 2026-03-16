@@ -32,6 +32,7 @@ services:
       - bear-go-gopath-volume:${GOPATH_DIR}
       - bear-go-logs-volume:${BEAR_LOG_DIR}
     command: /bin/sh -c "while sleep 1000; do :; done"
+    privileged: true
     cap_add:
       - SYS_PTRACE
     security_opt:

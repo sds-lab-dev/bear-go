@@ -114,10 +114,12 @@ ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
 COPY tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
 COPY tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
+COPY tools/bootstrap/install_docker.sh /tmp/install_docker.sh
 COPY .devcontainer/bashrc-settings /tmp/bashrc-settings
 RUN chmod +x \
     /usr/local/bin/devcontainer_entrypoint.sh \
-    /tmp/install_ai_assistants.sh && \
+    /tmp/install_ai_assistants.sh \
+    /tmp/install_docker.sh && \
     mkdir -p \
     "$XDG_CONFIG_HOME" \
     "$XDG_CACHE_HOME" \
@@ -126,7 +128,8 @@ RUN chmod +x \
     "$CODEX_HOME" \
     "$GEMINI_CLI_HOME" && \
     { printf '\n'; cat /tmp/bashrc-settings; printf '\n'; } >> /root/.bashrc && \
-    /tmp/install_ai_assistants.sh
+    /tmp/install_ai_assistants.sh && \
+    /tmp/install_docker.sh
 
 ENTRYPOINT ["/usr/local/bin/devcontainer_entrypoint.sh"]
 CMD [ "sleep", "infinity" ]
