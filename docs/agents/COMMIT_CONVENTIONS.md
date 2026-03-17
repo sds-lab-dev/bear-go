@@ -1,12 +1,16 @@
-# Commit Message Conventions
+# Commit Conventions
 
-## Core Rules
+---
+
+## 1. Core Rules
 
 - All commit messages MUST be in English.
 - Based on the workspace changes, produce EXACTLY ONE commit message in English, consisting of a
   single subject and a body explaining "why", NOT "what".
 
-## Commit Message Format
+---
+
+## 2. Commit Message Format
 
 A commit message MUST be formatted as follows:
 
@@ -94,7 +98,9 @@ A commit message MUST be formatted as follows:
   listing each individual modification.
 - Do NOT turn the body into a changelog or bullet list of file-by-file edits.
 
-## Output Constraints
+---
+
+## 3. Output Constraints
 
 - Output EXACTLY ONE commit message for the entire set of workspace changes.
 - NEVER output multiple commit messages.
