@@ -35,15 +35,20 @@ ENV GOENV=${GOPATH}/env
 ARG GOROOT_DIR=${OVERLAYS_DIR}/go-root
 ENV GOROOT=${GOROOT_DIR}
 
-ENV PATH=${GOPATH}/bin:${GOROOT}/bin:/usr/local/bin:${PATH}
+ARG PYTHON_VENV_DIR=${OVERLAYS_DIR}/venv
+ENV PYTHON_VENV_DIR=${PYTHON_VENV_DIR}
+
+ENV PATH=${GOPATH}/bin:${GOROOT}/bin:${PYTHON_VENV_DIR}/bin:/usr/local/bin:${PATH}
 
 WORKDIR /tmp
 COPY --chmod=755 tools/bootstrap/install_base_packages.sh .
 COPY --chmod=755 tools/bootstrap/install_golang.sh .
 COPY --chmod=755 tools/bootstrap/install_golang_extra_packages.sh .
+COPY --chmod=755 tools/bootstrap/install_langgraph.sh .
 RUN ./install_base_packages.sh && \
     ./install_golang.sh --version 1.26.0 && \
-    ./install_golang_extra_packages.sh
+    ./install_golang_extra_packages.sh && \
+    ./install_langgraph.sh
 
 ENV LANG=en_US.UTF-8
 ENV LC_CTYPE=ko_KR.UTF-8
@@ -90,6 +95,7 @@ COPY . .
 COPY --chmod=755 tools/bootstrap/install_docker.sh /tmp/install_docker.sh
 COPY --chmod=755 tools/bootstrap/start_dockerd.sh /usr/local/bin/start_dockerd.sh
 COPY --chmod=755 tools/bootstrap/ci_entrypoint.sh /usr/local/bin/ci_entrypoint.sh
+COPY --chmod=755 tools/bootstrap/install_langgraph_dependency.sh /usr/local/bin/install_langgraph_dependency.sh
 
 # CI_GIT_SHA is the Git SHA of the current commit, and it only exists in GitHub Actions.
 # It is used to identify the version of the application being built in BUILD_VERSION_SCRIPT.
@@ -134,6 +140,7 @@ ENV GEMINI_CLI_HOME=${GEMINI_CLI_HOME}
 
 COPY --chmod=755 tools/bootstrap/devcontainer_entrypoint.sh /usr/local/bin/devcontainer_entrypoint.sh
 COPY --chmod=755 tools/bootstrap/start_dockerd.sh /usr/local/bin/start_dockerd.sh
+COPY --chmod=755 tools/bootstrap/install_langgraph_dependency.sh /usr/local/bin/install_langgraph_dependency.sh
 COPY --chmod=755 tools/bootstrap/install_ai_assistants.sh /tmp/install_ai_assistants.sh
 COPY --chmod=755 tools/bootstrap/install_docker.sh /tmp/install_docker.sh
 COPY .devcontainer/bashrc-settings /tmp/bashrc-settings

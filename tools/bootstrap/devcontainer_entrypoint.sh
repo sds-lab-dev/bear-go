@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This script is the entrypoint for the development container. It is executed every time the
-# container starts with root permissions.
-# 
-# So, it can be used as an alternative to using the `postCreateCommand` or `postStartCommand`
-# hooks in `devcontainer.json` that are only executed once after the container is newly created or
-# started (only from stopped containers), respectively. 
+# This script is the entrypoint for the development container. 
+#
+# It is executed every time the container is newly created or started (only from stopped
+# containers) with root permissions.
 #
 # If you need to run some logic whenever the devcontainer project starts regardless of the
 # container is already started or not, you can add it to `.devcontainer/bashrc-settings`.
 
 source /usr/local/bin/start_dockerd.sh
+source /usr/local/bin/install_langgraph_dependency.sh
 
 # This git config settings use the `--system` flag to ensure that the devcontainer server copies
 # the hosts's git configurations. If we use the `--global` flag instead, the git configurations of
@@ -41,6 +40,7 @@ set_git_configs() {
 main() {
   set_git_configs
   start_dockerd
+  install_langgraph_dependency
 
   # Execute the command passed as arguments to the entrypoint. This allows the container to run the
   # default command specified in the Dockerfile or any command from the devcontainer. If this step

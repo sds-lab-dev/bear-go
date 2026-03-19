@@ -5,6 +5,9 @@
     "containerUser": "root",
     "remoteUser": "root",
     "workspaceFolder": "/workspace",
+    "containerEnv": {
+        "DEVCONTAINER_WORKSPACE": "/workspace"
+    },
     "overrideCommand": false,
     "shutdownAction": "stopCompose",
     "customizations": {
@@ -13,7 +16,8 @@
                 "debug.allowBreakpointsEverywhere": true,
                 "editor.codeActionsOnSave": {
                     "source.organizeImports": "always"
-                }
+                },
+                "python.defaultInterpreterPath": "/opt/venv/bin/python"
             },
             "extensions": [
                 "golang.go",
@@ -23,8 +27,5 @@
                 "openai.chatgpt"
             ]
         }
-    },
-    "remoteEnv": {
-        "DEVCONTAINER_WORKSPACE": "${containerWorkspaceFolder}"
     }
 }

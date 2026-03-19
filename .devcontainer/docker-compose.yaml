@@ -20,6 +20,7 @@ services:
         GEMINI_CLI_HOME: ${GEMINI_CLI_HOME}
         XDG_DIR: ${XDG_DIR}
         GOPATH_DIR: ${GOPATH_DIR}
+        PYTHON_VENV_DIR: ${PYTHON_VENV_DIR}
     environment:
       BEAR_LOG_DIR: ${BEAR_LOG_DIR}
     volumes:
