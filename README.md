@@ -1,8 +1,12 @@
 # Bear AI Developer Application
 
+**NOTE:** 
+In this project, always refer to document file paths using repository-root-relative logical paths
+(for example, `docs/my-document.md`).
+
 ## 1. App Introduction
 
-Read the [App Introduction](docs/agents/APP_INTRODUCTION.md) document to understand the core
+Read the `docs/agents/app-introduction.md` document to understand the core
 features and operation flow overview of the Bear AI Developer (a Go-based TUI application built
 on the Claude Code CLI). 
 
@@ -12,7 +16,7 @@ implementation, review, documentation).
 
 ## 2. Operation Flow
 
-Read the [Operation Flow](docs/agents/OPERATION_FLOW.md) document to understand the 7-step
+Read the `docs/agents/operation-flow.md` document to understand the 7-step
 development pipeline (from requirements to documentation) and the roles of specialized agents
 including DAG-based parallel task execution. 
 
@@ -25,7 +29,7 @@ next step, or understand how tasks and handoffs are structured among different a
 
 ## 1. Language Rules
 
-Read the [Language Rules](docs/agents/AI_LANGUAGE_RULES.md) document to understand the strict
+Read the `docs/agents/language-rules.md` document to understand the strict
 bilingual output guidelines (Korean for user chat/reasoning, English for code, comments, docs, and
 commits). 
 
@@ -34,7 +38,7 @@ language is applied based on the target context (chat window vs. artifacts).
 
 ## 2. Coding Conventions
 
-Read the [Coding Conventions](docs/agents/CODING_CONVENTIONS.md) document to understand the strict
+Read the `docs/agents/coding-conventions.md` document to understand the strict
 guidelines prioritizing code readability, naming rules, structural refactoring, and commenting.
 
 You MUST refer to this document whenever you write, modify, or review code to ensure it adheres to
@@ -43,7 +47,7 @@ performance optimizations.
 
 ## 3. Coding Guardrails
 
-Read the [Coding Guardrails](docs/agents/CODING_GUARDRAILS.md) document to understand the strict
+Read the `docs/agents/coding-guardrails.md` document to understand the strict
 boundaries for defensive programming, simplicity, surgical (minimal) code changes, and goal-driven
 test verification. 
 
@@ -53,7 +57,7 @@ correctness.
 
 ## 4. Commit Conventions
 
-Read the [Commit Conventions](docs/agents/COMMIT_CONVENTIONS.md) document to understand the strict
+Read the `docs/agents/commit-conventions.md` document to understand the strict
 formatting rules for git commits (Conventional Commits, 72-character limits, English-only,
 explaining the "why" instead of "what"). 
 
