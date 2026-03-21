@@ -41,8 +41,6 @@ apt-get \
     jq \
     bc \
     ripgrep \
-    python3-pip \
-    python3-venv \
     procps && \
 apt-get clean && \
 rm -rf /var/lib/apt/lists/*
@@ -51,4 +49,3 @@ update-ca-certificates
 printf "en_US.UTF-8 UTF-8\nko_KR.UTF-8 UTF-8\n" > /etc/locale.gen
 locale-gen
 ln -s /usr/bin/python3 /usr/bin/python
-python3 -m venv ${PYTHON_VENV_DIR}

@@ -17,7 +17,7 @@
                 "editor.codeActionsOnSave": {
                     "source.organizeImports": "always"
                 },
-                "python.defaultInterpreterPath": "/opt/venv/bin/python"
+                "python.defaultInterpreterPath": "${workspaceFolder}/langgraph/.venv"
             },
             "extensions": [
                 "golang.go",
@@ -27,5 +27,8 @@
                 "openai.chatgpt"
             ]
         }
-    }
+    },
+    "initializeCommand": "${localWorkspaceFolder}/.devcontainer/scripts/initialize_script.sh \"${localWorkspaceFolder}\"",
+    "postCreateCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_create_script.sh \"${containerWorkspaceFolder}\"",
+    "postStartCommand": "${containerWorkspaceFolder}/.devcontainer/scripts/post_start_script.sh \"${containerWorkspaceFolder}\""
 }
